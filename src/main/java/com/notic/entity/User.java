@@ -9,15 +9,24 @@ import lombok.Setter;
 @Table(name = "users")
 @Getter
 @Setter
+@NoArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    long id;
+    private long id;
 
-    String username;
 
-    String email;
+    private String username;
 
-    String password;
+    @Column(unique = true)
+    private String email;
+
+    private String password;
+
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
 }
