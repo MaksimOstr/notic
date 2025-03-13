@@ -3,7 +3,7 @@ package com.notic.service;
 import com.notic.dto.CreateUserDto;
 import com.notic.dto.UserDto;
 import com.notic.entity.User;
-import com.notic.exception.UserAlreadyExistsException;
+import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,7 +21,6 @@ public class AuthService {
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
 
-    @Transactional(rollbackFor = UserAlreadyExistsException.class)
     public UserDto signUp(CreateUserDto body) {
        User createdUser = userService.createUser(body);
 
