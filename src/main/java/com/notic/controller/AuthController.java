@@ -1,6 +1,7 @@
 package com.notic.controller;
 
 import com.notic.dto.CreateUserDto;
+import com.notic.dto.SignInDto;
 import com.notic.dto.UserDto;
 import com.notic.service.AuthService;
 import jakarta.validation.Valid;
@@ -21,5 +22,11 @@ public class AuthController {
     public ResponseEntity<UserDto> signUp(@Valid @RequestBody CreateUserDto body) {
         UserDto user = authService.signUp(body);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
+
+    @PostMapping("/sign-in")
+    public ResponseEntity<UserDto> signIn(@Valid @RequestBody SignInDto body) {
+        authService.signIn(body);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 }

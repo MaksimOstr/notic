@@ -6,13 +6,11 @@ import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -32,6 +30,7 @@ public class UserService {
         }
 
         Role defaultRole = roleService.getDefaultRole();
+
         User user = new User(
                 body.username(),
                 body.email(),
@@ -42,4 +41,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public Optional<User> getUserByEmailWithRoles(String email) {
+        return userRepository.findByEmailWithRoles(email);
+    }
 }

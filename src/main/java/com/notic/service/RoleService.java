@@ -25,18 +25,6 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
-    public Role getRole(String roleName) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new EntityNotFoundException("Role " + roleName + " not found"));
-
-        return role;
-    }
-
-    public Role getAdminRole() {
-        return roleRepository.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new EntityNotFoundException("No role found"));
-    }
-
     public Role getDefaultRole() {
         return roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new EntityNotFoundException("No role found"));

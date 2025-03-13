@@ -2,6 +2,7 @@ package com.notic.config;
 
 import com.notic.repository.UserRepository;
 import com.notic.security.service.CustomUserDetailsService;
+import com.notic.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,8 +25,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    UserDetailsService userDetailsService(UserRepository userRepository) {
-        return new CustomUserDetailsService(userRepository);
+    UserDetailsService userDetailsService(UserService userService) {
+        return new CustomUserDetailsService(userService);
     }
 
     @Bean
@@ -42,7 +43,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/sign-up").permitAll()
+                        .requestMatchers("auth/sign-up", "auth/sign-in").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }
