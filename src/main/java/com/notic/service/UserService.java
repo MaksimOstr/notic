@@ -5,6 +5,7 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class UserService {
     @Transactional(rollbackFor = EntityAlreadyExistsException.class)
     public User createUser(CreateUserDto body) {
         if(userRepository.existsByEmail(body.email())) {
-            throw new EntityAlreadyExistsException("User with email " + body.email() + " already exists");
+            throw new EntityAlreadyExistsException("User already exists");
         }
 
         Role defaultRole = roleService.getDefaultRole();
@@ -41,11 +42,13 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
-    public Optional<User> getUserByEmailWithRoles(String email) {
-        return userRepository.findByEmailWithRoles(email);
+    public User getUserByEmailWithRoles(String email) {
+        return userRepository.findByEmailWithRoles(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 }

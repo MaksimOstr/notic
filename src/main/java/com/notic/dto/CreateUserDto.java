@@ -13,6 +13,6 @@ public record CreateUserDto(
         String username,
 
         @NotBlank
-        @Size(min=4, max=20)
+        @Size(min=8, max=100)
         String password
 ) {}
