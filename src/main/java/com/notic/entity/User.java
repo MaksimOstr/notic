@@ -39,6 +39,9 @@ public class User {
     @Column(nullable = false)
     private Boolean accountNonLocked;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Set<RefreshToken> refreshToken;
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonManagedReference
     private List<Note> notes;

@@ -4,14 +4,12 @@ import com.notic.dto.CreateUserDto;
 import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
+import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 import java.util.Set;
 
 
@@ -44,11 +42,11 @@ public class UserService {
 
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
     }
 
     public User getUserByEmailWithRoles(String email) {
         return userRepository.findByEmailWithRoles(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
     }
 }
