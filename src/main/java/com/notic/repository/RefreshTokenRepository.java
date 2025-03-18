@@ -5,6 +5,7 @@ import com.notic.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
@@ -16,4 +17,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     @EntityGraph(value = "RefreshToken.withUserAndRoles", type = EntityGraph.EntityGraphType.FETCH)
     Optional<RefreshToken> findByToken(String token);
+
+    void deleteAllByExpiresAtBefore(Instant expiresAtBefore);
 }

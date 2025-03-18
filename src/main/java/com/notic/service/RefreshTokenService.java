@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.crypto.Mac;
@@ -22,6 +23,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -48,7 +50,6 @@ public class RefreshTokenService {
     public String getRefreshToken(User user, boolean isValidation) {
         String token = generateToken();
         String hashToken = hashToken(token);
-
         RefreshToken refreshToken = new RefreshToken(
                 hashToken,
                 user,
@@ -77,7 +78,8 @@ public class RefreshTokenService {
 
     @Transactional(rollbackFor = {EntityDoesNotExistsException.class, TokenValidationException.class})
     public RefreshToken validateToken(String refreshToken) {
-        RefreshToken token = findTokenByToken(hashToken(refreshToken));
+        RefreshToken token = findTokenByToken(hashToken(refreshToken))
+                .orElseThrow(() -> new TokenValidationException("Session is expired"));
 
         if(token.getExpiresAt().isBefore(Instant.now())) {
             deleteTokenByToken(token.getToken());
@@ -107,9 +109,8 @@ public class RefreshTokenService {
         return UUID.randomUUID() + HexFormat.of().formatHex(randomBytes);
     }
 
-    private RefreshToken findTokenByToken(String token) {
-        return refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new TokenValidationException("Session is expired"));
+    private Optional<RefreshToken> findTokenByToken(String token) {
+        return refreshTokenRepository.findByToken(token);
     }
 
     private void deleteAllTokensByUser(User user) {
@@ -123,5 +124,12 @@ public class RefreshTokenService {
 
     private Instant getExpireTime() {
         return Instant.now().plusSeconds(refreshTokenTtl);
+    }
+
+    @Transactional
+    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    public void removeExpiredTokens() {
+        Instant now = Instant.now();
+        refreshTokenRepository.deleteAllByExpiresAtBefore(now);
     }
 }
