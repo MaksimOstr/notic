@@ -12,6 +12,18 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
+@NamedEntityGraph(
+        name = "RefreshToken.withUserAndRoles",
+        attributeNodes = @NamedAttributeNode(value = "user", subgraph = "userRoles"),
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "userRoles",
+                        attributeNodes = {
+                                @NamedAttributeNode("roles")
+                        }
+                )
+        }
+)
 public class RefreshToken {
 
     @Id

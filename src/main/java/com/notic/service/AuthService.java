@@ -4,8 +4,10 @@ import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
+import com.notic.entity.RefreshToken;
 import com.notic.entity.User;
 import com.notic.mapper.UserMapper;
+import com.notic.security.model.CustomUserDetails;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,11 +39,22 @@ public class AuthService {
 
         User user = userService.getUserByEmail(body.email());
 
-        String refreshToken = refreshTokenService.getRefreshToken(user).getToken();
+        String refreshToken = refreshTokenService.getRefreshToken(user, false);
+        Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
         String accessToken = jwtTokenService.getJwsToken(authResult.getAuthorities(), authResult.getName());
+
+        return new TokenResponse(accessToken, refreshTokenCookie);
+   }
+
+   public TokenResponse refreshTokens(String suppliedRefreshToken) {
+        RefreshToken refreshTokenEntity = refreshTokenService.validateToken(suppliedRefreshToken);
+        CustomUserDetails userDetails = userMapper.toCustomUserDetails(refreshTokenEntity.getUser());
+        String accessToken = jwtTokenService.getJwsToken(userDetails.getAuthorities(), userDetails.getUsername());
+        String refreshToken = refreshTokenService.getRefreshToken(refreshTokenEntity.getUser(), true);
         Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
 
         return new TokenResponse(accessToken, refreshTokenCookie);
    }
+
 
 }

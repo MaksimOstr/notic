@@ -1,9 +1,11 @@
 package com.notic.controller;
 
+import com.notic.constants.TokenConstants;
 import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
+import com.notic.exception.TokenValidationException;
 import com.notic.security.model.CustomUserDetails;
 import com.notic.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,21 +32,27 @@ public class AuthController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<?> signIn(
+    public ResponseEntity<String> signIn(
             @Valid @RequestBody SignInDto body,
-            HttpServletResponse response,
-            HttpServletRequest request
+            HttpServletResponse response
     ) {
         TokenResponse tokens = authService.signIn(body);
         response.addCookie(tokens.refreshTokenCookie());
         return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<?> test(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refreshTokens(
+            @CookieValue(value = TokenConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response
     ) {
+        if(refreshToken == null) {
+            throw new TokenValidationException("Session is expired");
+        }
 
-        return ResponseEntity.status(HttpStatus.OK).body(userDetails);
+        TokenResponse tokens = authService.refreshTokens(refreshToken);
+
+        response.addCookie(tokens.refreshTokenCookie());
+        return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
 }
