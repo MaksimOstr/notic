@@ -8,6 +8,7 @@ import com.notic.dto.UserDto;
 import com.notic.exception.TokenValidationException;
 import com.notic.security.model.CustomUserDetails;
 import com.notic.service.AuthService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -54,5 +55,23 @@ public class AuthController {
 
         response.addCookie(tokens.refreshTokenCookie());
         return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(
+            @CookieValue(value = TokenConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        if(refreshToken == null) {
+            throw new TokenValidationException("Token was not provided.");
+        }
+
+        authService.logout(refreshToken);
+        Cookie refreshTokenCookie = new Cookie(TokenConstants.REFRESH_TOKEN_COOKIE_NAME, null);
+        refreshTokenCookie.setMaxAge(0);
+        refreshTokenCookie.setPath("/");
+        response.addCookie(refreshTokenCookie);
+
+        return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully.");
     }
 }

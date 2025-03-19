@@ -59,9 +59,11 @@ public class AuthService {
         return new TokenResponse(accessToken, refreshTokenCookie);
    }
 
+   public void logout(String refreshToken) {
+        refreshTokenService.deleteTokenByToken(refreshToken);
+   }
+
    private Set<String> mapRoles(Set<Role> userRoles) {
        return userRoles.stream().map(Role::getName).collect(Collectors.toSet());
    }
-
-
 }

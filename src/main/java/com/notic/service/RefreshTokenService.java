@@ -96,6 +96,11 @@ public class RefreshTokenService {
         return new RefreshTokenValidationResultDto(token, rawRefreshToken);
     }
 
+    public void deleteTokenByToken(String token) {
+        String hashedToken = hashToken(token);
+        refreshTokenRepository.deleteByToken(hashedToken);
+    }
+
     private String hashToken(String token) {
         try {
             Mac sha256HMAC = Mac.getInstance("HmacSHA256");
