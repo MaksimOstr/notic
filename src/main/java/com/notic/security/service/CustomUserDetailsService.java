@@ -2,6 +2,7 @@ package com.notic.security.service;
 
 import com.notic.entity.User;
 import com.notic.mapper.UserMapper;
+import com.notic.projection.UserCredentialsProjection;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +21,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userMapper.toCustomUserDetails(userService.getUserByEmailWithRoles(email));
+        return userMapper.toCustomUserDetails(userService.getUserForAuth(email));
     }
 }

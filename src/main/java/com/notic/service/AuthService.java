@@ -4,16 +4,21 @@ import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
-import com.notic.entity.RefreshToken;
+
+import com.notic.dto.RefreshTokenValidationResultDto;
+import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.mapper.UserMapper;
-import com.notic.security.model.CustomUserDetails;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -32,28 +37,30 @@ public class AuthService {
        return userMapper.toDto(createdUser);
    }
 
-
    public TokenResponse signIn(SignInDto body) {
         Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
         Authentication authResult = authenticationManager.authenticate(authReq);
-
-        User user = userService.getUserByEmail(body.email());
-
-        String refreshToken = refreshTokenService.getRefreshToken(user, false);
+        User user = userService.getUserByEmailWithRoles(body.email());
+        String refreshToken = refreshTokenService.getRefreshToken(user);
         Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
-        String accessToken = jwtTokenService.getJwsToken(authResult.getAuthorities(), authResult.getName());
+        String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), authResult.getName());
 
         return new TokenResponse(accessToken, refreshTokenCookie);
    }
 
-   public TokenResponse refreshTokens(String suppliedRefreshToken) {
-        RefreshToken refreshTokenEntity = refreshTokenService.validateToken(suppliedRefreshToken);
-        CustomUserDetails userDetails = userMapper.toCustomUserDetails(refreshTokenEntity.getUser());
-        String accessToken = jwtTokenService.getJwsToken(userDetails.getAuthorities(), userDetails.getUsername());
-        String refreshToken = refreshTokenService.getRefreshToken(refreshTokenEntity.getUser(), true);
-        Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
+
+   public TokenResponse refreshTokens(String refreshToken) {
+        RefreshTokenValidationResultDto refreshTokenValidationResultDto = refreshTokenService.validateAndRotateToken(refreshToken);
+        User user = refreshTokenValidationResultDto.refreshToken().getUser();
+        String rawToken = refreshTokenValidationResultDto.rawRefreshToken();
+        String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getEmail());
+        Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(rawToken);
 
         return new TokenResponse(accessToken, refreshTokenCookie);
+   }
+
+   private Set<String> mapRoles(Set<Role> userRoles) {
+       return userRoles.stream().map(Role::getName).collect(Collectors.toSet());
    }
 
 

@@ -2,6 +2,7 @@ package com.notic.security.filter;
 
 import com.notic.entity.User;
 import com.notic.mapper.UserMapper;
+import com.notic.projection.UserCredentialsProjection;
 import com.notic.security.model.CustomUserDetails;
 import com.notic.service.JwtService;
 import com.notic.service.UserService;
@@ -44,7 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
         if(SecurityContextHolder.getContext().getAuthentication() == null && token != null) {
             try {
                 String email = jwtService.extractEmail(token);
-                User user = userService.getUserByEmailWithRoles(email);
+                UserCredentialsProjection user = userService.getUserForAuth(email);
                 authenticateUser(user, request);
             } catch(ExpiredJwtException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -60,7 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void authenticateUser(User user, HttpServletRequest request) {
+    private void authenticateUser(UserCredentialsProjection user, HttpServletRequest request) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         CustomUserDetails userDetails = userMapper.toCustomUserDetails(user);
         userDetails.eraseCredentials();

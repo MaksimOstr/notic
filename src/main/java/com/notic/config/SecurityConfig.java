@@ -1,7 +1,6 @@
 package com.notic.config;
 
 import com.notic.mapper.UserMapper;
-import com.notic.repository.UserRepository;
 import com.notic.security.filter.JwtFilter;
 import com.notic.security.service.CustomUserDetailsService;
 import com.notic.service.UserService;
@@ -20,9 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -48,12 +45,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
         return http
+                .authenticationProvider(daoAuthenticationProvider)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("auth/sign-up", "auth/sign-in", "auth/refresh").permitAll()
+                        .requestMatchers("/auth/sign-up", "/auth/sign-in", "/auth/refresh").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -11,9 +11,8 @@ import java.util.Optional;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     boolean existsByToken(String token);
 
-    void deleteAllByUser(User user);
 
-    void deleteByToken(String token);
+    Optional<RefreshToken> findByUser(User user);
 
     @EntityGraph(value = "RefreshToken.withUserAndRoles", type = EntityGraph.EntityGraphType.FETCH)
     Optional<RefreshToken> findByToken(String token);

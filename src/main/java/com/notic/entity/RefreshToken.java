@@ -33,7 +33,7 @@ public class RefreshToken {
     @Column(unique = true, nullable = false)
     private String token;
 
-    @ManyToOne(optional = false)
+    @OneToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Column(nullable = false)

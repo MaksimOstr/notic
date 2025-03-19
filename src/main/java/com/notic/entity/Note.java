@@ -23,7 +23,7 @@ public class Note {
     private String title;
     private String content;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JsonBackReference
     private User author;
 

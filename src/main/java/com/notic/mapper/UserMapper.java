@@ -3,6 +3,7 @@ package com.notic.mapper;
 
 import com.notic.dto.UserDto;
 import com.notic.entity.User;
+import com.notic.projection.UserCredentialsProjection;
 import com.notic.security.model.CustomUserDetails;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,5 +21,5 @@ public interface UserMapper {
     UserDto toDto(User user);
 
     @Mapping(source = "roles", target = "authorities")
-    CustomUserDetails toCustomUserDetails(User user);
+    CustomUserDetails toCustomUserDetails(UserCredentialsProjection user);
 }

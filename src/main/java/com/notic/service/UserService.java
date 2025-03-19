@@ -5,6 +5,7 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.projection.UserCredentialsProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,6 +48,11 @@ public class UserService {
 
     public User getUserByEmailWithRoles(String email) {
         return userRepository.findByEmailWithRoles(email)
+                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
+    }
+
+    public UserCredentialsProjection getUserForAuth(String email) {
+        return userRepository.findUserForAuthByEmail(email)
                 .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
     }
 }

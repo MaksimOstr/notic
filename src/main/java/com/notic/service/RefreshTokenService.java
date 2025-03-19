@@ -2,9 +2,9 @@ package com.notic.service;
 
 import com.notic.constants.TokenConstants;
 import com.notic.entity.RefreshToken;
+import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
-import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.TokenValidationException;
 import com.notic.repository.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
@@ -47,20 +47,22 @@ public class RefreshTokenService {
     }
 
     @Transactional(rollbackFor = EntityAlreadyExistsException.class)
-    public String getRefreshToken(User user, boolean isValidation) {
+    public String getRefreshToken(User user) {
         String token = generateToken();
-        String hashToken = hashToken(token);
-        RefreshToken refreshToken = new RefreshToken(
-                hashToken,
-                user,
-                getExpireTime()
-        );
+        String hashedToken = hashToken(token);
+        Instant expireTime = getExpireTime();
 
-        if(!isValidation) {
-            deleteAllTokensByUser(user);
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByUser(user);
+        RefreshToken refreshToken;
+
+        if (optionalRefreshToken.isPresent()) {
+            refreshToken = optionalRefreshToken.get();
+            refreshToken.setToken(hashedToken);
+            refreshToken.setExpiresAt(expireTime);
+        } else {
+            refreshToken = new RefreshToken(hashedToken, user, expireTime);
+            refreshTokenRepository.save(refreshToken);
         }
-
-        refreshTokenRepository.save(refreshToken);
 
         return token;
     }
@@ -76,18 +78,22 @@ public class RefreshTokenService {
         return cookie;
     }
 
-    @Transactional(rollbackFor = {EntityDoesNotExistsException.class, TokenValidationException.class})
-    public RefreshToken validateToken(String refreshToken) {
+    @Transactional(rollbackFor = {TokenValidationException.class})
+    public RefreshTokenValidationResultDto validateAndRotateToken(String refreshToken) {
         RefreshToken token = findTokenByToken(hashToken(refreshToken))
-                .orElseThrow(() -> new TokenValidationException("Session is expired"));
+                .orElseThrow(() -> new TokenValidationException("Refresh token not found"));
 
         if(token.getExpiresAt().isBefore(Instant.now())) {
-            deleteTokenByToken(token.getToken());
+            deleteTokenById(token.getId());
             throw new TokenValidationException("Session is expired");
         }
 
-        deleteTokenByToken(refreshToken);
-        return token;
+        String rawRefreshToken = generateToken();
+
+        token.setToken(hashToken(rawRefreshToken));
+        token.setExpiresAt(getExpireTime());
+
+        return new RefreshTokenValidationResultDto(token, rawRefreshToken);
     }
 
     private String hashToken(String token) {
@@ -113,13 +119,9 @@ public class RefreshTokenService {
         return refreshTokenRepository.findByToken(token);
     }
 
-    private void deleteAllTokensByUser(User user) {
-        refreshTokenRepository.deleteAllByUser(user);
-    }
 
-    private void deleteTokenByToken(String token) {
-        String hashedToken = hashToken(token);
-        refreshTokenRepository.deleteByToken(hashedToken);
+    private void deleteTokenById(long id) {
+        refreshTokenRepository.deleteById(id);
     }
 
     private Instant getExpireTime() {

@@ -47,7 +47,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         if(refreshToken == null) {
-            throw new TokenValidationException("Session is expired");
+            throw new TokenValidationException("Token was not provided.");
         }
 
         TokenResponse tokens = authService.refreshTokens(refreshToken);

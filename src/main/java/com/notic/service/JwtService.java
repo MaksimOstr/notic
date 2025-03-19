@@ -25,7 +25,7 @@ public class JwtService {
     @Value("${JWT_EXPIRE_IN:600000}")
     private long jwtExpirationTime;
 
-    public String getJwsToken(Collection<? extends GrantedAuthority> authorities, String subject) {
+    public String getJwsToken(Collection<String> authorities, String subject) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", authorities);
         return generateJwtToken(claims, subject);
