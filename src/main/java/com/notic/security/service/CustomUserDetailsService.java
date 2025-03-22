@@ -1,6 +1,7 @@
 package com.notic.security.service;
 
 import com.notic.entity.User;
+import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.service.UserService;
@@ -11,7 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 
-
+//Remove throwing entity not found. Instead of it throw only UsernameNotFoundException!!!!!
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -21,6 +22,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userMapper.toCustomUserDetails(userService.getUserForAuth(email));
+        try {
+            UserCredentialsProjection user = userService.getUserForAuth(email);
+            return userMapper.toCustomUserDetails(user);
+        } catch (EntityDoesNotExistsException e) {
+            throw new UsernameNotFoundException(e.getMessage(), e);
+        } catch (Exception e) {
+            throw new UsernameNotFoundException("Authentication failed", e);
+        }
     }
 }

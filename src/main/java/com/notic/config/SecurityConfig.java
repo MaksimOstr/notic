@@ -2,13 +2,13 @@ package com.notic.config;
 
 import com.notic.mapper.UserMapper;
 import com.notic.security.filter.JwtFilter;
+import com.notic.security.handler.CustomAuthenticationEntryPoint;
 import com.notic.security.service.CustomUserDetailsService;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,7 +45,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
+    SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtFilter jwtFilter,
+            DaoAuthenticationProvider daoAuthenticationProvider,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint
+    ) throws Exception {
         return http
                 .authenticationProvider(daoAuthenticationProvider)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -54,11 +59,19 @@ public class SecurityConfig {
                         .requestMatchers("/auth/sign-up", "/auth/sign-in", "/auth/refresh", "/auth/logout").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
                 .build();
     }
 
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint();
     }
 }

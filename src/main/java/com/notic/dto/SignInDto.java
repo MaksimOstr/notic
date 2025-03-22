@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 
 public record SignInDto(
+        @NotBlank
         @Email
         String email,
 
