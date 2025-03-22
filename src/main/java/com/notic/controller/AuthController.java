@@ -6,16 +6,13 @@ import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
 import com.notic.exception.TokenValidationException;
-import com.notic.security.model.CustomUserDetails;
 import com.notic.service.AuthService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -69,6 +66,7 @@ public class AuthController {
         authService.logout(refreshToken);
         Cookie refreshTokenCookie = new Cookie(TokenConstants.REFRESH_TOKEN_COOKIE_NAME, null);
         refreshTokenCookie.setMaxAge(0);
+        refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
         response.addCookie(refreshTokenCookie);
 

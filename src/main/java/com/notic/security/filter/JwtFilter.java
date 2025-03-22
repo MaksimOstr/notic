@@ -1,6 +1,7 @@
 package com.notic.security.filter;
 
 import com.notic.entity.User;
+import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.security.model.CustomUserDetails;
@@ -23,6 +24,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
+//Improve
 
 @Component
 @RequiredArgsConstructor
@@ -55,7 +58,12 @@ public class JwtFilter extends OncePerRequestFilter {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Token is invalid");
                 return;
+            } catch (EntityDoesNotExistsException e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write(e.getMessage());
+                return;
             }
+
         }
 
         filterChain.doFilter(request, response);

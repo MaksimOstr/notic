@@ -39,6 +39,9 @@ public class RefreshTokenService {
     @Value("${REFRESH_TOKEN_TTL:3600}")
     private int refreshTokenTtl;
 
+    @Value("${DOMAIN:none.com}")
+    private String domain;
+
     @PostConstruct
     private void validateSecret() {
         if (refreshSecret == null || refreshSecret.length() < 32) {
@@ -46,7 +49,7 @@ public class RefreshTokenService {
         }
     }
 
-    @Transactional(rollbackFor = EntityAlreadyExistsException.class)
+    @Transactional
     public String getRefreshToken(User user) {
         String token = generateToken();
         String hashedToken = hashToken(token);
@@ -73,6 +76,7 @@ public class RefreshTokenService {
         cookie.setHttpOnly(true);
         cookie.setMaxAge(refreshTokenTtl);
         cookie.setPath("/");
+        cookie.setDomain(domain);
         cookie.setAttribute("SameSite", "Strict");
 
         return cookie;
