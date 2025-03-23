@@ -4,7 +4,6 @@ import com.notic.constants.TokenConstants;
 import com.notic.entity.RefreshToken;
 import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.User;
-import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.TokenValidationException;
 import com.notic.repository.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
@@ -30,7 +29,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM;
+
+    static {
+        try {
+            SECURE_RANDOM = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${REFRESH_TOKEN_SECRET:1212}")
@@ -76,8 +84,7 @@ public class RefreshTokenService {
         cookie.setHttpOnly(true);
         cookie.setMaxAge(refreshTokenTtl);
         cookie.setPath("/");
-        cookie.setDomain(domain);
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", "Lax");
 
         return cookie;
     }
@@ -118,7 +125,7 @@ public class RefreshTokenService {
     }
 
     private String generateToken() {
-        byte[] randomBytes = new byte[32];
+        byte[] randomBytes = new byte[64];
         SECURE_RANDOM.nextBytes(randomBytes);
 
         return UUID.randomUUID() + HexFormat.of().formatHex(randomBytes);

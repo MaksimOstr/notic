@@ -1,6 +1,5 @@
 package com.notic.security.service;
 
-import com.notic.entity.User;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
@@ -12,7 +11,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 
-//Remove throwing entity not found. Instead of it throw only UsernameNotFoundException!!!!!
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {

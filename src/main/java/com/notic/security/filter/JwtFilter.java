@@ -6,7 +6,6 @@ import com.notic.projection.UserCredentialsProjection;
 import com.notic.security.model.CustomUserDetails;
 import com.notic.service.JwtService;
 import com.notic.service.UserService;
-import io.jsonwebtoken.ClaimJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,7 +21,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
 //Improve

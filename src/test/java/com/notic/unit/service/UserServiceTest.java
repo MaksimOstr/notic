@@ -9,7 +9,6 @@ import com.notic.projection.UserCredentialsProjection;
 import com.notic.repository.UserRepository;
 import com.notic.service.RoleService;
 import com.notic.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
