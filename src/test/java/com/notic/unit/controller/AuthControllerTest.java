@@ -16,7 +16,6 @@ import com.notic.service.JwtService;
 import com.notic.service.RefreshTokenService;
 import com.notic.service.UserService;
 import jakarta.servlet.http.Cookie;
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -90,7 +89,7 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.email").isNotEmpty());
 
 
-            verify(authService, times(0)).signUp(any());
+            verify(authService, never()).signUp(any());
         }
 
         @Test
@@ -139,7 +138,7 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.email").isNotEmpty());
 
 
-            verify(authService, times(0)).signIn(any());
+            verify(authService, never()).signIn(any());
         }
 
         @Test
@@ -189,7 +188,7 @@ public class AuthControllerTest {
                         .andExpect(status().isUnauthorized())
                         .andExpect(header().doesNotExist("Set-Cookie"));
 
-                verify(authService, times(0)).refreshTokens(any());
+                verify(authService, never()).refreshTokens(any());
             }
 
             @Test
@@ -235,7 +234,7 @@ public class AuthControllerTest {
                     .andExpect(status().isUnauthorized())
                     .andExpect(header().doesNotExist("Set-Cookie"));
 
-            verify(authService, times(0)).logout(any());
+            verify(authService, never()).logout(any());
         }
 
         @Test

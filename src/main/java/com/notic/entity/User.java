@@ -2,6 +2,7 @@ package com.notic.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import java.util.Set;
 @Table(name = "users")
 @Getter
 @Setter
+@EqualsAndHashCode
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class User {
