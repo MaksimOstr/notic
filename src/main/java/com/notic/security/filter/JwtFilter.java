@@ -50,13 +50,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 String email = jwtService.extractEmail(token);
                 UserCredentialsProjection user = userService.getUserForAuth(email);
                 authenticateUser(user, request);
-            } catch(ExpiredJwtException e) {
+            } catch(ClaimJwtException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token expired");
-                return;
-            } catch (ClaimJwtException e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token is invalid");
                 return;
             } catch (EntityDoesNotExistsException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

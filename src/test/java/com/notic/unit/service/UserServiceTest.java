@@ -157,7 +157,6 @@ public class UserServiceTest {
     @Nested
     class getUserForAuth {
         private final String email = "test@gmail.com";
-        private final String password = "12121212";
 
         @Test
         void userDoesNotExist() {

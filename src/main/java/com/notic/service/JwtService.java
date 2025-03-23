@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    @Value("${JWT_SECRET:1234}")
+    @Value("${JWT_SECRET:123412121212121212}")
     private String jwtSecret;
 
     @Value("${ISSUER:some@gmail.com}")
@@ -51,7 +51,7 @@ public class JwtService {
     }
 
     private Claims getAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder().requireIssuer(issuer).setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
 
     private Key getSigningKey() {
