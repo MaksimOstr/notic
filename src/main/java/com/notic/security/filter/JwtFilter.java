@@ -1,6 +1,5 @@
 package com.notic.security.filter;
 
-import com.notic.entity.User;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
@@ -8,13 +7,14 @@ import com.notic.security.model.CustomUserDetails;
 import com.notic.service.JwtService;
 import com.notic.service.UserService;
 import io.jsonwebtoken.ClaimJwtException;
-import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,8 +49,13 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 String email = jwtService.extractEmail(token);
                 UserCredentialsProjection user = userService.getUserForAuth(email);
+
+                if(!user.isAccountNonLocked()) {
+                    throw new LockedException("User account is locked");
+                }
+
                 authenticateUser(user, request);
-            } catch(ClaimJwtException e) {
+            } catch(JwtException e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             } catch (EntityDoesNotExistsException e) {
@@ -81,7 +86,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader(HEADER_NAME);
-        if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
+        boolean isBearer = StringUtils.startsWithIgnoreCase(authHeader, BEARER_PREFIX);
+        if (StringUtils.hasText(authHeader) && isBearer) {
             String token = authHeader.substring(BEARER_PREFIX.length());
             if (StringUtils.hasText(token)) {
                 return token;
