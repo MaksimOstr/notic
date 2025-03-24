@@ -4,10 +4,10 @@ import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
-
 import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.Role;
 import com.notic.entity.User;
+import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -38,14 +38,14 @@ public class AuthService {
    public TokenResponse signIn(SignInDto body) {
         Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
         Authentication authResult = authenticationManager.authenticate(authReq);
-        User user = userService.getUserByEmailWithRoles(body.email());
+        User user = userService.getUserByEmailWithRoles(body.email())
+                .orElseThrow(() -> new AuthenticationFlowException("Authentication failed"));
         String refreshToken = refreshTokenService.getRefreshToken(user);
         Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
         String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), authResult.getName());
 
         return new TokenResponse(accessToken, refreshTokenCookie);
    }
-
 
    public TokenResponse refreshTokens(String refreshToken) {
         RefreshTokenValidationResultDto refreshTokenValidationResultDto = refreshTokenService.validateAndRotateToken(refreshToken);

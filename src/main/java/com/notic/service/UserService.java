@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -46,13 +48,11 @@ public class UserService {
                 .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
     }
 
-    public User getUserByEmailWithRoles(String email) {
-        return userRepository.findByEmailWithRoles(email)
-                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
+    public Optional<User> getUserByEmailWithRoles(String email) {
+        return userRepository.findByEmailWithRoles(email);
     }
 
-    public UserCredentialsProjection getUserForAuth(String email) {
-        return userRepository.findUserForAuthByEmail(email)
-                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
+    public Optional<UserCredentialsProjection> getUserForAuth(String email) {
+        return userRepository.findUserForAuthByEmail(email);
     }
 }

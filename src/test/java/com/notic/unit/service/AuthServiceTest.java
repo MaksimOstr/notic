@@ -27,6 +27,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.mockito.Mockito.*;
@@ -129,7 +130,7 @@ public class AuthServiceTest {
             Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
 
             when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authRes);
-            when(userService.getUserByEmailWithRoles(anyString())).thenReturn(user);
+            when(userService.getUserByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
             when(refreshTokenService.getRefreshToken(any(User.class))).thenReturn(refreshToken);
             when(refreshTokenService.getRefreshTokenCookie(anyString())).thenReturn(refreshTokenCookie);
             when(jwtService.getJwsToken(any(), any())).thenReturn(accessToken);

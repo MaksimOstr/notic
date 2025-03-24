@@ -1,6 +1,5 @@
 package com.notic.security.service;
 
-import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.service.UserService;
@@ -20,13 +19,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        try {
-            UserCredentialsProjection user = userService.getUserForAuth(email);
-            return userMapper.toCustomUserDetails(user);
-        } catch (EntityDoesNotExistsException e) {
-            throw new UsernameNotFoundException(e.getMessage(), e);
-        } catch (Exception e) {
-            throw new UsernameNotFoundException("Authentication failed", e);
-        }
+        UserCredentialsProjection user = userService.getUserForAuth(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Authentication failed"));
+        return userMapper.toCustomUserDetails(user);
     }
 }

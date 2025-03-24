@@ -1,15 +1,14 @@
 package com.notic.unit.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.notic.advice.AuthControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
 import com.notic.controller.AuthController;
 import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
-import com.notic.exception.EntityAlreadyExistsException;
-import com.notic.exception.EntityDoesNotExistsException;
-import com.notic.exception.TokenValidationException;
+import com.notic.exception.*;
 import com.notic.mapper.UserMapper;
 import com.notic.service.AuthService;
 import com.notic.service.JwtService;
@@ -63,9 +62,10 @@ public class AuthControllerTest {
     @BeforeEach
     void setup() {
         AuthController authController = new AuthController(authService);
-        GlobalControllerAdvice exceptionHandler = new GlobalControllerAdvice();
+        GlobalControllerAdvice globalExceptionHandler = new GlobalControllerAdvice();
+        AuthControllerAdvice authControllerAdvice = new AuthControllerAdvice();
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
-                .setControllerAdvice(exceptionHandler)
+                .setControllerAdvice(globalExceptionHandler, authControllerAdvice)
                 .build();
     }
 
@@ -117,8 +117,8 @@ public class AuthControllerTest {
             mockMvc.perform(post("/auth/sign-up")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(createUserDto)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$").value(errorMessage));
+                    .andExpect(status().is(409))
+                    .andExpect(jsonPath("$.message").value(errorMessage));
             verify(authService, times(1)).signUp(createUserDto);
         }
     }
@@ -143,15 +143,15 @@ public class AuthControllerTest {
 
         @Test
         void userDoesNotExist() throws Exception {
-            String errorMessage = "Such user does not exist";
+            String errorMessage = "Authentication failed";
 
-            when(authService.signIn(signInDto)).thenThrow(new EntityDoesNotExistsException(errorMessage));
+            when(authService.signIn(signInDto)).thenThrow(new AuthenticationFlowException(errorMessage));
 
             mockMvc.perform(post("/auth/sign-in")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(signInDto)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$").value(errorMessage));
+                    .andExpect(status().is(401))
+                    .andExpect(jsonPath("$.message").value(errorMessage));
 
 
             verify(authService, times(1)).signIn(any());
@@ -186,6 +186,7 @@ public class AuthControllerTest {
             void tokenWasNotProvided() throws Exception {
                 mockMvc.perform(post("/auth/refresh"))
                         .andExpect(status().isUnauthorized())
+                        .andExpect(jsonPath("$.message").value("Token was not provided"))
                         .andExpect(header().doesNotExist("Set-Cookie"));
 
                 verify(authService, never()).refreshTokens(any());
@@ -196,7 +197,7 @@ public class AuthControllerTest {
                 String accessToken = "accessToken";
                 TokenResponse tokenResponse = new TokenResponse(accessToken, refreshCookie);
 
-                when(authService.refreshTokens(refreshToken)).thenReturn(tokenResponse);
+                when(authService.refreshTokens(anyString())).thenReturn(tokenResponse);
 
                 mockMvc.perform(post("/auth/refresh")
                         .cookie(refreshCookie))
@@ -211,15 +212,15 @@ public class AuthControllerTest {
             @Test
             void tokenValidationError() throws Exception {
 
-                String errorMessage = "Refresh token validation error";
+                String errorMessage = "Token was not provided";
 
-                when(authService.refreshTokens(refreshToken)).thenThrow(new TokenValidationException(errorMessage));
+                when(authService.refreshTokens(anyString())).thenThrow(new TokenValidationException(errorMessage));
 
                 mockMvc.perform(post("/auth/refresh")
                                 .cookie(refreshCookie))
-                        .andExpect(status().isUnauthorized())
-                        .andExpect(header().doesNotExist("Set-Cookie"))
-                        .andExpect(jsonPath("$").value(errorMessage));
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(header().doesNotExist("Set-Cookie"))
+                                .andExpect(jsonPath("$.message").value(errorMessage));
 
                 verify(authService, times(1)).refreshTokens(refreshToken);
             }
@@ -230,8 +231,11 @@ public class AuthControllerTest {
     class LogoutTest {
         @Test
         void tokenWasNotProvided() throws Exception {
+            String errorMessage = "Required data was not provided";
+
             mockMvc.perform(post("/auth/logout"))
-                    .andExpect(status().isUnauthorized())
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value(errorMessage))
                     .andExpect(header().doesNotExist("Set-Cookie"));
 
             verify(authService, never()).logout(any());

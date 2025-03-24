@@ -5,14 +5,24 @@ import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
+import com.notic.exception.InvalidLogoutRequestException;
 import com.notic.exception.TokenValidationException;
+import com.notic.response.ApiErrorResponse;
 import com.notic.service.AuthService;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -23,29 +33,91 @@ public class AuthController {
 
     private final AuthService authService;
 
+
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Account created"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Invalid data",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = {@ExampleObject("{\"message\": \"User already exists\", \"status\": \"Bad request\"}")}
+                    )
+
+            )
+    })
     @PostMapping("/sign-up")
     public ResponseEntity<UserDto> signUp(@Valid @RequestBody CreateUserDto body) {
         UserDto user = authService.signUp(body);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
+
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successful sign in operation",
+                    content = @Content(examples = @ExampleObject(value = "access_token")),
+                    headers = @Header(
+                            name = "Set-Cookie",
+                            description = "Refresh token",
+                            schema = @Schema(
+                                    example = "refreshToken=1141i3jh3b14jb2435b2k34"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid email or password",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject("{\"message\": \"Bad credentials\", \"status\": \"Unauthorized\"}")
+                    )
+            )
+    })
     @PostMapping("/sign-in")
     public ResponseEntity<String> signIn(
             @Valid @RequestBody SignInDto body,
             HttpServletResponse response
     ) {
-        TokenResponse tokens = authService.signIn(body);
-        response.addCookie(tokens.refreshTokenCookie());
-        return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
+            TokenResponse tokens = authService.signIn(body);
+            response.addCookie(tokens.refreshTokenCookie());
+            return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
 
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successful refresh token operation",
+                    content = @Content(examples = @ExampleObject(value = "access_token")),
+                    headers = @Header(
+                            name = "Set-Cookie",
+                            description = "Refresh token",
+                            schema = @Schema(
+                                    example = "refreshToken=1141i3jh3b14jb2435b2k34"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Token validation fail",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject("{\"message\": \"Token validation fail\", \"status\": \"Unauthorized\"}")
+                    )
+            )
+    })
     @PostMapping("/refresh")
     public ResponseEntity<String> refreshTokens(
             @CookieValue(value = TokenConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if(refreshToken == null) {
-            throw new TokenValidationException("Token was not provided.");
+            throw new TokenValidationException("Token was not provided");
         }
 
         TokenResponse tokens = authService.refreshTokens(refreshToken);
@@ -54,13 +126,38 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
 
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successful logout operation",
+                    content = @Content(
+                            examples = @ExampleObject(value = "You have been logged out successfully.")
+                    ),
+                    headers = @Header(
+                            name = "Set-Cookie",
+                            description = "Delete refresh token cookie",
+                            schema = @Schema(
+                                    example = "refreshToken=null"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Refresh token was not provided",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject("{\"message\": \"Logout failed\", \"status\": \"Bad request\"}")
+                    )
+
+            )
+    })
     @PostMapping("/logout")
     public ResponseEntity<String> logout(
             @CookieValue(value = TokenConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if(refreshToken == null) {
-            throw new TokenValidationException("Token was not provided.");
+            throw new InvalidLogoutRequestException("Required data was not provided");
         }
 
         authService.logout(refreshToken);
@@ -70,6 +167,6 @@ public class AuthController {
         refreshTokenCookie.setPath("/");
         response.addCookie(refreshTokenCookie);
 
-        return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully.");
+        return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully");
     }
 }

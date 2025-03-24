@@ -1,8 +1,10 @@
 package com.notic.security.filter;
 
-import com.notic.exception.EntityDoesNotExistsException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
+import com.notic.response.ApiErrorResponse;
 import com.notic.security.model.CustomUserDetails;
 import com.notic.service.JwtService;
 import com.notic.service.UserService;
@@ -22,6 +24,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 //Improve
 
@@ -44,21 +48,25 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = extractToken(request);
 
         if(SecurityContextHolder.getContext().getAuthentication() == null && token != null) {
+            System.out.println("test");
             try {
                 String email = jwtService.extractEmail(token);
-                UserCredentialsProjection user = userService.getUserForAuth(email);
+                UserCredentialsProjection user = userService.getUserForAuth(email)
+                        .orElseThrow(() -> new AuthenticationFlowException("Authentication failed"));
 
                 if(!user.isAccountNonLocked()) {
                     throw new LockedException("User account is locked");
                 }
 
                 authenticateUser(user, request);
-            } catch(JwtException e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            } catch (EntityDoesNotExistsException e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write(e.getMessage());
+            } catch(JwtException | AuthenticationFlowException | LockedException e) {
+
+                Map<String, String> errorDetails = new HashMap<>();
+                errorDetails.put("message", e.getMessage());
+                errorDetails.put("status", "Forbidden");
+
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                new ObjectMapper().writeValue(response.getWriter(), errorDetails);
                 return;
             }
 

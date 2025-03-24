@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.security.Key;
@@ -23,6 +24,13 @@ public class JwtService {
 
     @Value("${JWT_EXPIRE_IN:600000}")
     private long jwtExpirationTime;
+
+    @PostConstruct
+    private void validateSecret() {
+        if (jwtSecret == null || jwtSecret.length() < 32) {
+            throw new IllegalStateException("JWT_SECRET must be at least 32 characters");
+        }
+    }
 
     public String getJwsToken(Collection<String> authorities, String subject) {
         Map<String, Object> claims = new HashMap<>();

@@ -112,7 +112,7 @@ public class UserServiceTest {
             }
 
             @Test
-            void UserExists() {
+            void userExists() {
                 when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 
                 User result = userService.getUserByEmail(email);
@@ -135,21 +135,23 @@ public class UserServiceTest {
         void userDoesNotExist() {
             when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.empty());
 
-            Exception result = assertThrows(EntityDoesNotExistsException.class, () -> userService.getUserByEmailWithRoles(email));
+            Optional<User> result = userService.getUserByEmailWithRoles(email);
 
-            assertEquals("User not found", result.getMessage());
+            verify(userRepository, times(1)).findByEmailWithRoles(email);
+
+            assertFalse(result.isPresent());
         }
 
         @Test
-        void UserExists() {
+        void userExists() {
             when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
 
-            User result = userService.getUserByEmailWithRoles(email);
+            Optional<User> result = userService.getUserByEmailWithRoles(email);
 
-
-            assertNotNull(result);
+            assertTrue(result.isPresent());
+            assertNotNull(result.get());
             verify(userRepository, times(1)).findByEmailWithRoles(email);
-            assertEquals(user, result);
+            assertEquals(user, result.get());
         }
     }
 
@@ -161,9 +163,11 @@ public class UserServiceTest {
         void userDoesNotExist() {
             when(userRepository.findUserForAuthByEmail(anyString())).thenReturn(Optional.empty());
 
-            Exception result = assertThrows(EntityDoesNotExistsException.class, () -> userService.getUserForAuth(email));
+            Optional<UserCredentialsProjection> result = userService.getUserForAuth(email);
 
-            assertEquals("User not found", result.getMessage());
+            assertFalse(result.isPresent());
+
+            verify(userRepository, times(1)).findUserForAuthByEmail(email);
         }
 
         @Test
@@ -172,9 +176,10 @@ public class UserServiceTest {
             UserCredentialsProjection projectionMock = mock(UserCredentialsProjection.class);
             when(userRepository.findUserForAuthByEmail(anyString())).thenReturn(Optional.of(projectionMock));
 
-            UserCredentialsProjection result = userService.getUserForAuth(email);
+            Optional<UserCredentialsProjection> result = userService.getUserForAuth(email);
 
-            assertNotNull(result);
+            assertTrue(result.isPresent());
+
             verify(userRepository, times(1)).findUserForAuthByEmail(email);
         }
     }
