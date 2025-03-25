@@ -32,16 +32,16 @@ public class JwtService {
         }
     }
 
-    public String getJwsToken(Collection<String> authorities, String subject) {
+    public String getJwsToken(Collection<String> authorities, long subjectId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", authorities);
-        return generateJwtToken(claims, subject);
+        return generateJwtToken(claims, subjectId);
     }
 
-    private String generateJwtToken(Map<String, Object> claims, String subject) {
+    private String generateJwtToken(Map<String, Object> claims, long subjectId) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(subject)
+                .setSubject(Long.toString(subjectId))
                 .setIssuer(issuer)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationTime))
@@ -49,7 +49,7 @@ public class JwtService {
                 .compact();
     }
 
-    public String extractEmail(String token) {
+    public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 

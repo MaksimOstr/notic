@@ -4,11 +4,10 @@ package com.notic.mapper;
 import com.notic.dto.UserDto;
 import com.notic.entity.User;
 import com.notic.projection.UserCredentialsProjection;
-import com.notic.security.model.CustomUserDetails;
+import com.notic.config.security.model.CustomUserDetails;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-import org.springframework.security.core.userdetails.UserDetails;
 
 
 @Mapper(componentModel = "spring")

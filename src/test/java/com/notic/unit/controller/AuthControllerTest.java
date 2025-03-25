@@ -10,6 +10,7 @@ import com.notic.dto.TokenResponse;
 import com.notic.dto.UserDto;
 import com.notic.exception.*;
 import com.notic.mapper.UserMapper;
+import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
 import com.notic.service.AuthService;
 import com.notic.service.JwtService;
 import com.notic.service.RefreshTokenService;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 @WebMvcTest(controllers = {AuthController.class})
 public class AuthControllerTest {
@@ -55,9 +57,11 @@ public class AuthControllerTest {
     @MockitoBean
     private UserMapper userMapper;
 
+    @MockitoBean
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
     @Autowired
     private ObjectMapper objectMapper;
-
 
     @BeforeEach
     void setup() {

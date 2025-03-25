@@ -121,7 +121,7 @@ public class AuthServiceTest {
 
 
         @Test
-        void SuccesfullySignIn() {
+        void SuccessfullySignIn() {
 
             Authentication authRes = new UsernamePasswordAuthenticationToken(signInDto.email(), signInDto.password(), Set.of());
             User user = new User("test", signInDto.email(), "hashed", Set.of());
@@ -133,7 +133,7 @@ public class AuthServiceTest {
             when(userService.getUserByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
             when(refreshTokenService.getRefreshToken(any(User.class))).thenReturn(refreshToken);
             when(refreshTokenService.getRefreshTokenCookie(anyString())).thenReturn(refreshTokenCookie);
-            when(jwtService.getJwsToken(any(), any())).thenReturn(accessToken);
+            when(jwtService.getJwsToken(any(), anyLong())).thenReturn(accessToken);
 
             TokenResponse result = authService.signIn(signInDto);
 
@@ -141,7 +141,7 @@ public class AuthServiceTest {
             verify(userService, times(1)).getUserByEmailWithRoles(signInDto.email());
             verify(refreshTokenService, times(1)).getRefreshToken(user);
             verify(refreshTokenService, times(1)).getRefreshTokenCookie(refreshToken);
-            verify(jwtService, times(1)).getJwsToken(any(), any());
+            verify(jwtService, times(1)).getJwsToken(any(), anyLong());
 
             assertNotNull(result);
             assertEquals(accessToken, result.accessToken());
@@ -176,13 +176,13 @@ public class AuthServiceTest {
             Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
 
             when(refreshTokenService.validateAndRotateToken(anyString())).thenReturn(refreshTokenValidationResultDto);
-            when(jwtService.getJwsToken(any(), any())).thenReturn(accessToken);
+            when(jwtService.getJwsToken(any(), anyLong())).thenReturn(accessToken);
             when(refreshTokenService.getRefreshTokenCookie(refreshToken)).thenReturn(refreshTokenCookie);
 
             TokenResponse result = authService.refreshTokens(refreshToken);
 
             verify(refreshTokenService, times(1)).validateAndRotateToken(refreshToken);
-            verify(jwtService, times(1)).getJwsToken(Set.of(userRole.getName()), user.getEmail());
+            verify(jwtService, times(1)).getJwsToken(Set.of(userRole.getName()), user.getId());
             verify(refreshTokenService, times(1)).getRefreshTokenCookie(refreshToken);
 
             assertNotNull(result);

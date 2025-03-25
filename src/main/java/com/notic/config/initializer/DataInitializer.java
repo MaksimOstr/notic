@@ -1,4 +1,4 @@
-package com.notic.initializer;
+package com.notic.config.initializer;
 
 
 import com.notic.entity.Role;

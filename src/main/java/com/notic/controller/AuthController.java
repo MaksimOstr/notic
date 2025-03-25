@@ -21,8 +21,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -45,7 +43,7 @@ public class AuthController {
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = {@ExampleObject("{\"message\": \"User already exists\", \"status\": \"Bad request\"}")}
+                            examples = {@ExampleObject("{\"message\": \"User already exists\", \"status\": \"409\"}")}
                     )
 
             )
@@ -75,7 +73,7 @@ public class AuthController {
                     description = "Invalid email or password",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Bad credentials\", \"status\": \"Unauthorized\"}")
+                            examples = @ExampleObject("{\"message\": \"Bad credentials\", \"status\": \"401\"}")
                     )
             )
     })
@@ -107,7 +105,7 @@ public class AuthController {
                     description = "Token validation fail",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Token validation fail\", \"status\": \"Unauthorized\"}")
+                            examples = @ExampleObject("{\"message\": \"Token validation fail\", \"status\": \"401\"}")
                     )
             )
     })
@@ -146,7 +144,7 @@ public class AuthController {
                     description = "Refresh token was not provided",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Logout failed\", \"status\": \"Bad request\"}")
+                            examples = @ExampleObject("{\"message\": \"Logout failed\", \"status\": \"400\"}")
                     )
 
             )
@@ -168,5 +166,10 @@ public class AuthController {
         response.addCookie(refreshTokenCookie);
 
         return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully");
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.status(HttpStatus.OK).body("test");
     }
 }

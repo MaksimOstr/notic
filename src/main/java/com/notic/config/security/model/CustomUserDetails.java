@@ -1,4 +1,4 @@
-package com.notic.security.model;
+package com.notic.config.security.model;
 
 
 import com.notic.entity.Role;

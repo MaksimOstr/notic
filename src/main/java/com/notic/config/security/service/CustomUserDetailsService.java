@@ -1,4 +1,4 @@
-package com.notic.security.service;
+package com.notic.config.security.service;
 
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
@@ -19,7 +19,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserCredentialsProjection user = userService.getUserForAuth(email)
+        UserCredentialsProjection user = userService.getUserForAuthByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Authentication failed"));
         return userMapper.toCustomUserDetails(user);
     }

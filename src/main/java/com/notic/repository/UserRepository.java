@@ -27,4 +27,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE u.email = :email
         """)
     Optional<UserCredentialsProjection> findUserForAuthByEmail(String email);
+
+
+    @Query("""
+        SELECT u.email AS email,
+               u.password AS password,
+               u.accountNonLocked AS accountNonLocked,
+               r AS roles
+        FROM User u
+        JOIN u.roles r
+        WHERE u.id = :id
+        """)
+    Optional<UserCredentialsProjection> findUserForAuthById(long id);
 }

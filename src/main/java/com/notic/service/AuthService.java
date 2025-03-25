@@ -29,6 +29,7 @@ public class AuthService {
     private final JwtService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
 
+
     public UserDto signUp(CreateUserDto body) {
        User createdUser = userService.createUser(body);
 
@@ -37,12 +38,12 @@ public class AuthService {
 
    public TokenResponse signIn(SignInDto body) {
         Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
-        Authentication authResult = authenticationManager.authenticate(authReq);
+        authenticationManager.authenticate(authReq);
         User user = userService.getUserByEmailWithRoles(body.email())
                 .orElseThrow(() -> new AuthenticationFlowException("Authentication failed"));
         String refreshToken = refreshTokenService.getRefreshToken(user);
         Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
-        String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), authResult.getName());
+        String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getId());
 
         return new TokenResponse(accessToken, refreshTokenCookie);
    }
@@ -51,7 +52,7 @@ public class AuthService {
         RefreshTokenValidationResultDto refreshTokenValidationResultDto = refreshTokenService.validateAndRotateToken(refreshToken);
         User user = refreshTokenValidationResultDto.refreshToken().getUser();
         String rawToken = refreshTokenValidationResultDto.rawRefreshToken();
-        String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getEmail());
+        String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getId());
         Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(rawToken);
 
         return new TokenResponse(accessToken, refreshTokenCookie);

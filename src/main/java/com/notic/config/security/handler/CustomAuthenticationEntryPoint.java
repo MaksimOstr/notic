@@ -1,17 +1,18 @@
-package com.notic.security.handler;
+package com.notic.config.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.notic.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -22,13 +23,17 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException {
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        Map<String, String> errorDetails = new HashMap<>();
-        errorDetails.put("message", authException.getMessage());
-        errorDetails.put("status", "Unauthorized");
+        if(authException == null) {
+            authException = new BadCredentialsException("Authentication exception");
+        }
 
-        new ObjectMapper().writeValue(response.getWriter(), errorDetails);
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(authException.getMessage(), 401);
+
+        new ObjectMapper().writeValue(response.getWriter(), errorResponse);
     }
 }

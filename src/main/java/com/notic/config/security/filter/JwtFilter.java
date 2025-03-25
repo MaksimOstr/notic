@@ -1,11 +1,10 @@
-package com.notic.security.filter;
+package com.notic.config.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
 import com.notic.projection.UserCredentialsProjection;
-import com.notic.response.ApiErrorResponse;
-import com.notic.security.model.CustomUserDetails;
+import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
+import com.notic.config.security.model.CustomUserDetails;
 import com.notic.service.JwtService;
 import com.notic.service.UserService;
 import io.jsonwebtoken.JwtException;
@@ -17,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -24,9 +24,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 //Improve
 
 @Component
@@ -37,6 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserService userService;
     private final UserMapper userMapper;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(
@@ -48,10 +46,9 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = extractToken(request);
 
         if(SecurityContextHolder.getContext().getAuthentication() == null && token != null) {
-            System.out.println("test");
             try {
-                String email = jwtService.extractEmail(token);
-                UserCredentialsProjection user = userService.getUserForAuth(email)
+                String userId = jwtService.extractUserId(token);
+                UserCredentialsProjection user = userService.getUserForAuthById(Long.parseLong(userId))
                         .orElseThrow(() -> new AuthenticationFlowException("Authentication failed"));
 
                 if(!user.isAccountNonLocked()) {
@@ -59,17 +56,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
 
                 authenticateUser(user, request);
-            } catch(JwtException | AuthenticationFlowException | LockedException e) {
-
-                Map<String, String> errorDetails = new HashMap<>();
-                errorDetails.put("message", e.getMessage());
-                errorDetails.put("status", "Forbidden");
-
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                new ObjectMapper().writeValue(response.getWriter(), errorDetails);
+            } catch(JwtException | AuthenticationFlowException e) {
+                logger.warn("User not found or invalid token");
+                SecurityContextHolder.clearContext();
+                customAuthenticationEntryPoint.commence(request, response, null);
+                return;
+            } catch (AuthenticationException e) {
+                logger.warn("User locked");
+                SecurityContextHolder.clearContext();
+                customAuthenticationEntryPoint.commence(request, response, e);
                 return;
             }
-
         }
 
         filterChain.doFilter(request, response);

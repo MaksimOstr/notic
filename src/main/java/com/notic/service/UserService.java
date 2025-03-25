@@ -52,7 +52,11 @@ public class UserService {
         return userRepository.findByEmailWithRoles(email);
     }
 
-    public Optional<UserCredentialsProjection> getUserForAuth(String email) {
+    public Optional<UserCredentialsProjection> getUserForAuthByEmail(String email) {
         return userRepository.findUserForAuthByEmail(email);
+    }
+
+    public Optional<UserCredentialsProjection> getUserForAuthById(long id) {
+        return userRepository.findUserForAuthById(id);
     }
 }

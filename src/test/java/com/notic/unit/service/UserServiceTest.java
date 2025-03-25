@@ -163,7 +163,7 @@ public class UserServiceTest {
         void userDoesNotExist() {
             when(userRepository.findUserForAuthByEmail(anyString())).thenReturn(Optional.empty());
 
-            Optional<UserCredentialsProjection> result = userService.getUserForAuth(email);
+            Optional<UserCredentialsProjection> result = userService.getUserForAuthByEmail(email);
 
             assertFalse(result.isPresent());
 
@@ -176,7 +176,7 @@ public class UserServiceTest {
             UserCredentialsProjection projectionMock = mock(UserCredentialsProjection.class);
             when(userRepository.findUserForAuthByEmail(anyString())).thenReturn(Optional.of(projectionMock));
 
-            Optional<UserCredentialsProjection> result = userService.getUserForAuth(email);
+            Optional<UserCredentialsProjection> result = userService.getUserForAuthByEmail(email);
 
             assertTrue(result.isPresent());
 

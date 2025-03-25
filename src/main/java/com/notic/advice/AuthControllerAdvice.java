@@ -15,11 +15,11 @@ public class AuthControllerAdvice {
 
     @ExceptionHandler({AuthenticationFlowException.class, TokenValidationException.class})
     public ResponseEntity<ApiErrorResponse> handleAuthException(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiErrorResponse(e.getMessage(), "Unauthorized"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiErrorResponse(e.getMessage(), 401));
     }
 
     @ExceptionHandler(InvalidLogoutRequestException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidLogoutRequest(InvalidLogoutRequestException ex) {
-        return ResponseEntity.badRequest().body(new ApiErrorResponse(ex.getMessage(), "Bad Request"));
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(ex.getMessage(), 400));
     }
 }

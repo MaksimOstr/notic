@@ -1,9 +1,9 @@
-package com.notic.config;
+package com.notic.config.security;
 
 import com.notic.mapper.UserMapper;
-import com.notic.security.filter.JwtFilter;
-import com.notic.security.handler.CustomAuthenticationEntryPoint;
-import com.notic.security.service.CustomUserDetailsService;
+import com.notic.config.security.filter.JwtFilter;
+import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
+import com.notic.config.security.service.CustomUserDetailsService;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

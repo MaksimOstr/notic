@@ -16,7 +16,7 @@ public class GlobalControllerAdvice {
 
     @ExceptionHandler({EntityDoesNotExistsException.class, EntityAlreadyExistsException.class})
     private ResponseEntity<ApiErrorResponse> handleBadRequest(RuntimeException ex) {
-        return ResponseEntity.status(409).body(new ApiErrorResponse(ex.getMessage(), "Conflict"));
+        return ResponseEntity.status(409).body(new ApiErrorResponse(ex.getMessage(), 409));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
