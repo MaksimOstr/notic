@@ -39,7 +39,6 @@ public class RefreshTokenServiceTest {
         refreshTokenService = new RefreshTokenService(refreshTokenRepository);
         ReflectionTestUtils.setField(refreshTokenService, "refreshSecret", "1212");
         ReflectionTestUtils.setField(refreshTokenService, "refreshTokenTtl", 3600);
-        ReflectionTestUtils.setField(refreshTokenService, "domain", "none.com");
     }
 
     @Nested

@@ -28,10 +28,13 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
+    private final EmailService emailService;
 
 
     public UserDto signUp(CreateUserDto body) {
        User createdUser = userService.createUser(body);
+
+       emailService.sendSimpleEmail(createdUser.getEmail(), "Email verification", "123456");
 
        return userMapper.toDto(createdUser);
    }

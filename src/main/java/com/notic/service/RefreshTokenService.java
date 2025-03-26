@@ -13,31 +13,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.HexFormat;
 import java.util.Optional;
-import java.util.UUID;
+
+import static com.notic.utils.RefreshTokenUtils.*;
 
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
-
-    private static final SecureRandom SECURE_RANDOM;
-
-    static {
-        try {
-            SECURE_RANDOM = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -46,9 +29,6 @@ public class RefreshTokenService {
 
     @Value("${REFRESH_TOKEN_TTL:3600}")
     private int refreshTokenTtl;
-
-    @Value("${DOMAIN:none.com}")
-    private String domain;
 
     @PostConstruct
     private void validateSecret() {
@@ -60,7 +40,7 @@ public class RefreshTokenService {
     @Transactional
     public String getRefreshToken(User user) {
         String token = generateToken();
-        String hashedToken = hashToken(token);
+        String hashedToken = hashToken(token, refreshSecret);
         Instant expireTime = getExpireTime();
 
         Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByUser(user);
@@ -91,7 +71,7 @@ public class RefreshTokenService {
 
     @Transactional(rollbackFor = {TokenValidationException.class})
     public RefreshTokenValidationResultDto validateAndRotateToken(String refreshToken) {
-        RefreshToken token = findTokenByToken(hashToken(refreshToken))
+        RefreshToken token = findTokenByToken(hashToken(refreshToken, refreshSecret))
                 .orElseThrow(() -> new TokenValidationException("Refresh token not found"));
 
         if(token.getExpiresAt().isBefore(Instant.now())) {
@@ -101,40 +81,20 @@ public class RefreshTokenService {
 
         String rawRefreshToken = generateToken();
 
-        token.setToken(hashToken(rawRefreshToken));
+        token.setToken(hashToken(rawRefreshToken, refreshSecret));
         token.setExpiresAt(getExpireTime());
 
         return new RefreshTokenValidationResultDto(token, rawRefreshToken);
     }
 
     public void deleteTokenByToken(String token) {
-        String hashedToken = hashToken(token);
+        String hashedToken = hashToken(token, refreshSecret);
         refreshTokenRepository.deleteByToken(hashedToken);
-    }
-
-    private String hashToken(String token) {
-        try {
-            Mac sha256HMAC = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secretKey = new SecretKeySpec(refreshSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-            sha256HMAC.init(secretKey);
-            byte[] hashedBytes = sha256HMAC.doFinal(token.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hashedBytes);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new RuntimeException("Hashing error", e);
-        }
-    }
-
-    private String generateToken() {
-        byte[] randomBytes = new byte[64];
-        SECURE_RANDOM.nextBytes(randomBytes);
-
-        return UUID.randomUUID() + HexFormat.of().formatHex(randomBytes);
     }
 
     private Optional<RefreshToken> findTokenByToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
-
 
     private void deleteTokenById(long id) {
         refreshTokenRepository.deleteById(id);

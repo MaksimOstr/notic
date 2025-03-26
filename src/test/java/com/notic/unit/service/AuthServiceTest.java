@@ -7,10 +7,7 @@ import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.TokenValidationException;
 import com.notic.mapper.UserMapper;
-import com.notic.service.AuthService;
-import com.notic.service.JwtService;
-import com.notic.service.RefreshTokenService;
-import com.notic.service.UserService;
+import com.notic.service.*;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -52,6 +50,8 @@ public class AuthServiceTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private AuthService authService;

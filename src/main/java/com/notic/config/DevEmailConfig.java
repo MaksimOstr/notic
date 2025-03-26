@@ -3,12 +3,14 @@ package com.notic.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.util.Properties;
 
 @Configuration
+@Profile("dev")
 public class DevEmailConfig {
 
     @Value("${spring.mail.host}")
@@ -23,12 +25,6 @@ public class DevEmailConfig {
     @Value("${spring.mail.password}")
     private String password;
 
-    @Value("${spring.mail.properties.mail.smtp.auth}")
-    private boolean smtpAuth;
-
-    @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
-    private boolean tlsEnable;
-
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -38,8 +34,8 @@ public class DevEmailConfig {
         mailSender.setPassword(password);
 
         Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.smtp.auth", smtpAuth);
-        props.put("mail.smtp.starttls.enable", tlsEnable);
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
 
         return mailSender;
     }

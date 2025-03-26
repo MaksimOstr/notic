@@ -11,10 +11,7 @@ import com.notic.dto.UserDto;
 import com.notic.exception.*;
 import com.notic.mapper.UserMapper;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
-import com.notic.service.AuthService;
-import com.notic.service.JwtService;
-import com.notic.service.RefreshTokenService;
-import com.notic.service.UserService;
+import com.notic.service.*;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -22,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.mail.MailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,6 +43,7 @@ public class AuthControllerTest {
     @MockitoBean
     private JwtService jwtService;
 
+
     @MockitoBean
     private AuthenticationManager authenticationManager;
 
@@ -59,6 +58,9 @@ public class AuthControllerTest {
 
     @MockitoBean
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    @MockitoBean
+    private EmailService emailService;
 
     @Autowired
     private ObjectMapper objectMapper;
