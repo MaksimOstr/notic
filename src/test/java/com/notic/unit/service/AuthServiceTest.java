@@ -4,6 +4,8 @@ import com.notic.dto.*;
 import com.notic.entity.RefreshToken;
 import com.notic.entity.Role;
 import com.notic.entity.User;
+import com.notic.entity.VerificationCode;
+import com.notic.event.EmailVerificationEvent;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.TokenValidationException;
 import com.notic.mapper.UserMapper;
@@ -17,23 +19,20 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
-
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
-
 
     @Mock
     private JwtService jwtService;
@@ -51,13 +50,19 @@ public class AuthServiceTest {
     private AuthenticationManager authenticationManager;
 
     @Mock
-    private EmailService emailService;
+    private VerificationCodeService verificationCodeService;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private AuthService authService;
 
     @Captor
     private ArgumentCaptor<Authentication> authenticationCaptor;
+
+    @Captor
+    private ArgumentCaptor<EmailVerificationEvent> emailVerificationEventCaptor;
 
 
     @Nested
@@ -82,16 +87,20 @@ public class AuthServiceTest {
 
         @Test
         void SuccesfullySignUp() {
+            VerificationCode verificationCode = new VerificationCode(user, 123456, Instant.now());
+
+            when(verificationCodeService.createVerificationCode(any(User.class))).thenReturn(verificationCode);
             when(userService.createUser(any(CreateUserDto.class))).thenReturn(user);
             when(userMapper.toDto(any(User.class))).thenReturn(new UserDto(1, createUserDto.email(), createUserDto.username()));
-
             UserDto result = authService.signUp(createUserDto);
 
 
             verify(userService, times(1)).createUser(createUserDto);
             verify(userMapper, times(1)).toDto(user);
+            verify(applicationEventPublisher, times(1)).publishEvent(emailVerificationEventCaptor.capture());
 
-
+            assertEquals(emailVerificationEventCaptor.getValue().code(), verificationCode.getCode());
+            assertEquals(emailVerificationEventCaptor.getValue().email(), user.getEmail());
             assertNotNull(result);
             assertEquals(result.username(), createUserDto.username());
             assertEquals(result.email(), createUserDto.email());

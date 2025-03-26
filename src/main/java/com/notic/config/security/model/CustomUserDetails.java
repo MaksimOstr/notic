@@ -1,6 +1,5 @@
 package com.notic.config.security.model;
 
-
 import com.notic.entity.Role;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,13 +15,15 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
     private final String email;
     private String password;
     private final boolean accountNonLocked;
+    private final boolean enabled;
     private final Set<Role> authorities;
 
-    public CustomUserDetails(String email, String password, boolean accountNonLocked, Set<Role> authorities) {
+    public CustomUserDetails(String email, String password, boolean accountNonLocked, boolean enabled, Set<Role> authorities) {
         this.email = email;
         this.password = password;
         this.accountNonLocked = accountNonLocked;
         this.authorities = authorities;
+        this.enabled = enabled;
     }
 
     @Override
@@ -57,7 +58,7 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
     @Override

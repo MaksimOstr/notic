@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -58,5 +57,12 @@ public class UserService {
 
     public Optional<UserCredentialsProjection> getUserForAuthById(long id) {
         return userRepository.findUserForAuthById(id);
+    }
+
+    public void markUserAsVerified(long id) {
+        int updated = userRepository.updateEnabledStatus(id, true);
+        if(updated == 0) {
+            throw new EntityDoesNotExistsException("User not found");
+        }
     }
 }

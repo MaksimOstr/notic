@@ -1,6 +1,5 @@
 package com.notic.service;
 
-import com.notic.constants.TokenConstants;
 import com.notic.entity.RefreshToken;
 import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.User;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Optional;
-
 import static com.notic.utils.RefreshTokenUtils.*;
 
 @Service
@@ -59,7 +57,7 @@ public class RefreshTokenService {
     }
 
     public Cookie getRefreshTokenCookie(String refreshToken) {
-        Cookie cookie = new Cookie(TokenConstants.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
 
         cookie.setHttpOnly(true);
         cookie.setMaxAge(refreshTokenTtl);

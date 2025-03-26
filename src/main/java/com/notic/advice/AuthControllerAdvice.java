@@ -4,6 +4,7 @@ import com.notic.controller.AuthController;
 import com.notic.exception.AuthenticationFlowException;
 import com.notic.exception.InvalidLogoutRequestException;
 import com.notic.exception.TokenValidationException;
+import com.notic.exception.VerificationCodeException;
 import com.notic.response.ApiErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,11 @@ public class AuthControllerAdvice {
 
     @ExceptionHandler(InvalidLogoutRequestException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidLogoutRequest(InvalidLogoutRequestException ex) {
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(ex.getMessage(), 400));
+    }
+
+    @ExceptionHandler(VerificationCodeException.class)
+    public ResponseEntity<ApiErrorResponse> handleVerificationCodeException(VerificationCodeException ex) {
         return ResponseEntity.badRequest().body(new ApiErrorResponse(ex.getMessage(), 400));
     }
 }

@@ -7,10 +7,13 @@ import com.notic.dto.UserDto;
 import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.Role;
 import com.notic.entity.User;
+import com.notic.entity.VerificationCode;
+import com.notic.event.EmailVerificationEvent;
 import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,15 +31,16 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
-    private final EmailService emailService;
-
+    private final VerificationCodeService verificationCodeService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public UserDto signUp(CreateUserDto body) {
-       User createdUser = userService.createUser(body);
-
-       emailService.sendSimpleEmail(createdUser.getEmail(), "Email verification", "123456");
-
-       return userMapper.toDto(createdUser);
+        User createdUser = userService.createUser(body);
+        VerificationCode verificationCode = verificationCodeService.createVerificationCode(createdUser);
+        applicationEventPublisher.publishEvent(new EmailVerificationEvent(
+                createdUser.getEmail(), verificationCode.getCode()
+        ));
+        return userMapper.toDto(createdUser);
    }
 
    public TokenResponse signIn(SignInDto body) {
@@ -63,6 +67,12 @@ public class AuthService {
 
    public void logout(String refreshToken) {
         refreshTokenService.deleteTokenByToken(refreshToken);
+   }
+
+   public void verifyAccount(long code) {
+       long userId = verificationCodeService.verifyCode(code);
+
+       userService.markUserAsVerified(userId);
    }
 
    private Set<String> mapRoles(Set<Role> userRoles) {

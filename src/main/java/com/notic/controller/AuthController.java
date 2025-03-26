@@ -1,14 +1,11 @@
 package com.notic.controller;
 
-import com.notic.constants.TokenConstants;
-import com.notic.dto.CreateUserDto;
-import com.notic.dto.SignInDto;
-import com.notic.dto.TokenResponse;
-import com.notic.dto.UserDto;
+import com.notic.dto.*;
 import com.notic.exception.InvalidLogoutRequestException;
 import com.notic.exception.TokenValidationException;
 import com.notic.response.ApiErrorResponse;
 import com.notic.service.AuthService;
+import com.notic.utils.RefreshTokenUtils;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -111,7 +108,7 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<String> refreshTokens(
-            @CookieValue(value = TokenConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            @CookieValue(value = RefreshTokenUtils.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if(refreshToken == null) {
@@ -151,7 +148,7 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<String> logout(
-            @CookieValue(value = TokenConstants.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
+            @CookieValue(value = RefreshTokenUtils.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if(refreshToken == null) {
@@ -159,7 +156,7 @@ public class AuthController {
         }
 
         authService.logout(refreshToken);
-        Cookie refreshTokenCookie = new Cookie(TokenConstants.REFRESH_TOKEN_COOKIE_NAME, null);
+        Cookie refreshTokenCookie = new Cookie(RefreshTokenUtils.REFRESH_TOKEN_COOKIE_NAME, null);
         refreshTokenCookie.setMaxAge(0);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
@@ -168,8 +165,41 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully");
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.status(HttpStatus.OK).body("test");
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Code is valid and account was activated",
+                    content = @Content(
+                            examples = @ExampleObject("Email verified")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Code is invalid or expired",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject("{\"message\": \"Verification code is expired\", \"status\": \"400\"}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Code is valid, but user does not exist",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject("{\"message\": \"User does not exist\", \"status\": \"409\"}")
+                    )
+            )
+    })
+    @PostMapping("/verify-account")
+    public ResponseEntity<String> verifyAccount(
+            @Valid
+            @RequestBody
+            VerificationCodeRequestDto request
+    ) {
+        long parsedCode = Long.parseLong(request.code());
+
+        authService.verifyAccount(parsedCode);
+
+        return ResponseEntity.status(HttpStatus.OK).body("Email verified");
     }
 }

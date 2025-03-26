@@ -41,6 +41,9 @@ public class User {
     @Column(nullable = false)
     private Boolean accountNonLocked;
 
+    @Column(nullable = false)
+    private Boolean enabled;
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonManagedReference
     private List<Note> notes;
@@ -64,6 +67,10 @@ public class User {
     void onCreate() {
         if (accountNonLocked == null) {
             accountNonLocked = true;
+        }
+
+        if(enabled == null) {
+            enabled = false;
         }
     }
 }

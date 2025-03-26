@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notic.advice.AuthControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
 import com.notic.controller.AuthController;
-import com.notic.dto.CreateUserDto;
-import com.notic.dto.SignInDto;
-import com.notic.dto.TokenResponse;
-import com.notic.dto.UserDto;
+import com.notic.dto.*;
 import com.notic.exception.*;
 import com.notic.mapper.UserMapper;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
@@ -18,8 +15,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
-import org.springframework.mail.MailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,7 +57,13 @@ public class AuthControllerTest {
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @MockitoBean
-    private EmailService emailService;
+    private EmailVerificationService emailService;
+
+    @MockitoBean
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @MockitoBean
+    private VerificationCodeService verificationCodeService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -263,6 +266,48 @@ public class AuthControllerTest {
                     .andExpect(cookie().maxAge(refreshToken, 0));
 
             verify(authService, times(1)).logout(refreshToken);
+        }
+    }
+
+
+    @Nested
+    class VerifyAccountTest {
+
+        private final String InvalidCode = "1234";
+        private final String code = "12345678";
+        private final VerificationCodeRequestDto verificationCodeRequestDto = new VerificationCodeRequestDto(code);
+
+        @Test
+        void codeValidationError() throws Exception {
+            mockMvc.perform(post("/auth/verify-account")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(new VerificationCodeRequestDto(InvalidCode))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").isNotEmpty());
+
+            verify(authService, never()).verifyAccount(anyLong());
+        }
+
+        @Test
+        void emptyFieldCode() throws Exception {
+            mockMvc.perform(post("/auth/verify-account")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").isNotEmpty());
+
+            verify(authService, never()).verifyAccount(anyLong());
+        }
+
+        @Test
+        void successfulVerifyAccount() throws Exception {
+            mockMvc.perform(post("/auth/verify-account")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(verificationCodeRequestDto)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isNotEmpty());
+
+            verify(authService, times(1)).verifyAccount(Long.parseLong(verificationCodeRequestDto.code()));
         }
     }
 }
