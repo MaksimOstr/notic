@@ -38,6 +38,8 @@ public class User {
     @CreatedDate
     private Instant createdAt;
 
+    private String avatar;
+
     @Column(nullable = false)
     private Boolean accountNonLocked;
 

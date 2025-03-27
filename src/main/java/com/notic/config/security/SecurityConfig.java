@@ -1,5 +1,6 @@
 package com.notic.config.security;
 
+import com.notic.config.security.handler.CustomAccessDeniedHandler;
 import com.notic.mapper.UserMapper;
 import com.notic.config.security.filter.JwtFilter;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
@@ -49,7 +50,8 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtFilter jwtFilter,
             DaoAuthenticationProvider daoAuthenticationProvider,
-            CustomAuthenticationEntryPoint customAuthenticationEntryPoint
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+            CustomAccessDeniedHandler customAccessDeniedHandler
     ) throws Exception {
         return http
                 .authenticationProvider(daoAuthenticationProvider)
@@ -62,6 +64,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .build();
     }

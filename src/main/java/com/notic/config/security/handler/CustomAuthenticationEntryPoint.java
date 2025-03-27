@@ -31,7 +31,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 
-        ApiErrorResponse errorResponse = new ApiErrorResponse(authException.getMessage(), 401);
+        ApiErrorResponse errorResponse = new ApiErrorResponse(HttpStatus.UNAUTHORIZED.getReasonPhrase(),  authException.getMessage(), HttpStatus.UNAUTHORIZED.value());
 
         new ObjectMapper().writeValue(response.getWriter(), errorResponse);
     }
