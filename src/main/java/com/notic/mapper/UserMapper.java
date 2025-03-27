@@ -19,6 +19,7 @@ public interface UserMapper {
     @Mapping(source = "email", target = "email")
     UserDto toDto(User user);
 
-    @Mapping(source = "roles", target = "authorities")
+    @Mapping(source = "roleNames", target = "authorities")
+    @Mapping(source = "id", target = "userId")
     CustomUserDetails toCustomUserDetails(UserCredentialsProjection user);
 }

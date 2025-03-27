@@ -60,7 +60,14 @@ public class UserService {
     }
 
     public void markUserAsVerified(long id) {
-        int updated = userRepository.updateEnabledStatus(id, true);
+        int updated = userRepository.updateEnabledStatusById(id, true);
+        if(updated == 0) {
+            throw new EntityDoesNotExistsException("User not found");
+        }
+    }
+
+    public void updateUserAvatarById(long id, String avatarUrl) {
+        int updated = userRepository.updateUserAvatarById(id, avatarUrl);
         if(updated == 0) {
             throw new EntityDoesNotExistsException("User not found");
         }

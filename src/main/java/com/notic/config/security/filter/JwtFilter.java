@@ -76,6 +76,7 @@ public class JwtFilter extends OncePerRequestFilter {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         CustomUserDetails userDetails = userMapper.toCustomUserDetails(user);
         userDetails.eraseCredentials();
+
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,

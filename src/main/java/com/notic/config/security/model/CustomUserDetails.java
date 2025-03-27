@@ -1,6 +1,7 @@
 package com.notic.config.security.model;
 
 import com.notic.entity.Role;
+import lombok.Getter;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,19 +17,22 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
     private String password;
     private final boolean accountNonLocked;
     private final boolean enabled;
-    private final Set<Role> authorities;
+    private final Set<String> authorities;
+    @Getter
+    private final long userId;
 
-    public CustomUserDetails(String email, String password, boolean accountNonLocked, boolean enabled, Set<Role> authorities) {
+    public CustomUserDetails(String email, String password, boolean accountNonLocked, boolean enabled, long userId, Set<String> authorities) {
         this.email = email;
         this.password = password;
         this.accountNonLocked = accountNonLocked;
         this.authorities = authorities;
         this.enabled = enabled;
+        this.userId = userId;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities.stream().map(authority -> new SimpleGrantedAuthority(authority.getName())).collect(Collectors.toList());
+        return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
     @Override
@@ -65,4 +69,5 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
     public void eraseCredentials() {
         this.password = null;
     }
+
 }

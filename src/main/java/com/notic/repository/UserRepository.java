@@ -20,11 +20,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     @Query("""
-        SELECT u.email AS email,
+        SELECT
+               u.id as id,
+               u.email AS email,
                u.password AS password,
                u.accountNonLocked AS accountNonLocked,
                u.enabled AS enabled,
-               r AS roles
+               r.name AS roleNames
         FROM User u
         JOIN u.roles r
         WHERE u.email = :email
@@ -33,11 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
     @Query("""
-        SELECT u.email AS email,
+        SELECT
+               u.id as id,
+               u.email AS email,
                u.password AS password,
                u.accountNonLocked AS accountNonLocked,
                u.enabled AS enabled,
-               r AS roles
+               r.name AS roleNames
         FROM User u
         JOIN u.roles r
         WHERE u.id = :id
@@ -47,5 +51,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.enabled = :enabled WHERE u.id = :id")
-    int updateEnabledStatus(@Param("id") long id, @Param("enabled") boolean enabled);
+    int updateEnabledStatusById(@Param("id") long id, @Param("enabled") boolean enabled);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.avatar = :avatar WHERE u.id = :id")
+    int updateUserAvatarById(@Param("id") long id, @Param("avatar") String avatarUrl);
 }

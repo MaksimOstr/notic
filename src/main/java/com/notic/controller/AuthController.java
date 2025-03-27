@@ -28,7 +28,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
