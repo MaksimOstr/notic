@@ -1,6 +1,7 @@
 package com.notic.repository;
 
 import com.notic.entity.User;
+import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -47,6 +48,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE u.id = :id
         """)
     Optional<UserCredentialsProjection> findUserForAuthById(long id);
+
+    Optional<JwtAuthUserProjection> findUserForJwtAuthById(long id);
 
     @Modifying
     @Transactional

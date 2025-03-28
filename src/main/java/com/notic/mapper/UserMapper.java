@@ -3,6 +3,7 @@ package com.notic.mapper;
 
 import com.notic.dto.UserDto;
 import com.notic.entity.User;
+import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.config.security.model.CustomUserDetails;
 import org.mapstruct.Mapper;
@@ -22,4 +23,7 @@ public interface UserMapper {
     @Mapping(source = "roleNames", target = "authorities")
     @Mapping(source = "id", target = "userId")
     CustomUserDetails toCustomUserDetails(UserCredentialsProjection user);
+
+    @Mapping(source = "id", target = "userId")
+    CustomUserDetails toCustomUserDetails(JwtAuthUserProjection userDto);
 }

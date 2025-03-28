@@ -5,6 +5,7 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -71,5 +72,10 @@ public class UserService {
         if(updated == 0) {
             throw new EntityDoesNotExistsException("User not found");
         }
+    }
+
+    public Optional<JwtAuthUserProjection> getUserForJwtAuth(long id) {
+        return userRepository.findUserForJwtAuthById(id);
+
     }
 }

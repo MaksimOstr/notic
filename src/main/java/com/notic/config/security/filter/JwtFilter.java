@@ -2,6 +2,7 @@ package com.notic.config.security.filter;
 
 import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
+import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
 import com.notic.config.security.model.CustomUserDetails;
@@ -17,6 +18,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -24,6 +26,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 //Improve
 
 @Component
@@ -48,14 +54,15 @@ public class JwtFilter extends OncePerRequestFilter {
         if(SecurityContextHolder.getContext().getAuthentication() == null && token != null) {
             try {
                 String userId = jwtService.extractUserId(token);
-                UserCredentialsProjection user = userService.getUserForAuthById(Long.parseLong(userId))
+                Collection<String> roles = jwtService.extractAuthorities(token);
+                JwtAuthUserProjection user = userService.getUserForJwtAuth(Long.parseLong(userId))
                         .orElseThrow(() -> new AuthenticationFlowException("Authentication failed"));
 
                 if(!user.isAccountNonLocked()) {
                     throw new LockedException("User account is locked");
                 }
 
-                authenticateUser(user, request);
+                authenticateUser(user, roles, request);
             } catch(JwtException | AuthenticationFlowException e) {
                 logger.warn("User not found or invalid token");
                 SecurityContextHolder.clearContext();
@@ -72,15 +79,14 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void authenticateUser(UserCredentialsProjection user, HttpServletRequest request) {
+    private void authenticateUser(JwtAuthUserProjection user, Collection<String> roles, HttpServletRequest request) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         CustomUserDetails userDetails = userMapper.toCustomUserDetails(user);
-        userDetails.eraseCredentials();
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
-                userDetails.getAuthorities()
+                roles.stream().map(SimpleGrantedAuthority::new).toList()
         );
 
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

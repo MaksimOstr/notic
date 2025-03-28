@@ -4,19 +4,16 @@ import com.notic.config.security.model.CustomUserDetails;
 import com.notic.dto.CustomPutObjectDto;
 import com.notic.service.S3Service;
 import com.notic.service.UserService;
-import io.awspring.cloud.s3.ObjectMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.Principal;
 import java.util.UUID;
 
 @Slf4j
