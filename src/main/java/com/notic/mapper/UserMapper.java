@@ -23,7 +23,4 @@ public interface UserMapper {
     @Mapping(source = "roleNames", target = "authorities")
     @Mapping(source = "id", target = "userId")
     CustomUserDetails toCustomUserDetails(UserCredentialsProjection user);
-
-    @Mapping(source = "id", target = "userId")
-    CustomUserDetails toCustomUserDetails(JwtAuthUserProjection userDto);
 }

@@ -27,27 +27,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
                u.password AS password,
                u.accountNonLocked AS accountNonLocked,
                u.enabled AS enabled,
+               u.authProvider AS authProvider,
                r.name AS roleNames
         FROM User u
         JOIN u.roles r
         WHERE u.email = :email
         """)
     Optional<UserCredentialsProjection> findUserForAuthByEmail(String email);
-
-
-    @Query("""
-        SELECT
-               u.id as id,
-               u.email AS email,
-               u.password AS password,
-               u.accountNonLocked AS accountNonLocked,
-               u.enabled AS enabled,
-               r.name AS roleNames
-        FROM User u
-        JOIN u.roles r
-        WHERE u.id = :id
-        """)
-    Optional<UserCredentialsProjection> findUserForAuthById(long id);
 
     Optional<JwtAuthUserProjection> findUserForJwtAuthById(long id);
 

@@ -43,6 +43,10 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
@@ -56,8 +60,9 @@ public class UserService {
         return userRepository.findUserForAuthByEmail(email);
     }
 
-    public Optional<UserCredentialsProjection> getUserForAuthById(long id) {
-        return userRepository.findUserForAuthById(id);
+    public Optional<JwtAuthUserProjection> getUserForJwtAuth(long id) {
+        return userRepository.findUserForJwtAuthById(id);
+
     }
 
     public void markUserAsVerified(long id) {
@@ -72,10 +77,5 @@ public class UserService {
         if(updated == 0) {
             throw new EntityDoesNotExistsException("User not found");
         }
-    }
-
-    public Optional<JwtAuthUserProjection> getUserForJwtAuth(long id) {
-        return userRepository.findUserForJwtAuthById(id);
-
     }
 }

@@ -1,11 +1,8 @@
 package com.notic.config.security.filter;
 
 import com.notic.exception.AuthenticationFlowException;
-import com.notic.mapper.UserMapper;
 import com.notic.projection.JwtAuthUserProjection;
-import com.notic.projection.UserCredentialsProjection;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
-import com.notic.config.security.model.CustomUserDetails;
 import com.notic.service.JwtService;
 import com.notic.service.UserService;
 import io.jsonwebtoken.JwtException;
@@ -15,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -26,11 +24,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
-//Improve
+
 
 @Component
 @RequiredArgsConstructor
@@ -39,7 +34,6 @@ public class JwtFilter extends OncePerRequestFilter {
     public static final String HEADER_NAME = "Authorization";
     private final JwtService jwtService;
     private final UserService userService;
-    private final UserMapper userMapper;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Override
@@ -66,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
             } catch(JwtException | AuthenticationFlowException e) {
                 logger.warn("User not found or invalid token");
                 SecurityContextHolder.clearContext();
-                customAuthenticationEntryPoint.commence(request, response, null);
+                customAuthenticationEntryPoint.commence(request, response, new BadCredentialsException(e.getMessage()));
                 return;
             } catch (AuthenticationException e) {
                 logger.warn("User locked");

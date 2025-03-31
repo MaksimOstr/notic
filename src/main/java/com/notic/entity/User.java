@@ -1,6 +1,7 @@
 package com.notic.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.notic.enums.AuthProviderEnum;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,13 +33,15 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
     @CreatedDate
     private Instant createdAt;
 
     private String avatar;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProviderEnum authProvider;
 
     @Column(nullable = false)
     private Boolean accountNonLocked;
@@ -63,6 +66,16 @@ public class User {
         this.email = email;
         this.password = password;
         this.roles = roles;
+        this.authProvider = AuthProviderEnum.LOCAL;
+
+    }
+
+    public User(String username, String email, Set<Role> roles, AuthProviderEnum authProvider) {
+        this.username = username;
+        this.email = email;
+        this.enabled = true;
+        this.roles = roles;
+        this.authProvider = authProvider;
     }
 
     @PrePersist

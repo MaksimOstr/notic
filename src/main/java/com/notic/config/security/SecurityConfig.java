@@ -3,6 +3,9 @@ package com.notic.config.security;
 import com.notic.config.security.handler.CustomAccessDeniedHandler;
 import com.notic.config.security.filter.JwtFilter;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
+import com.notic.config.security.handler.OAuth2SuccessHandler;
+import com.notic.config.security.handler.Oauth2FailureHandler;
+import com.notic.config.security.service.CustomOidcUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,22 +46,29 @@ public class SecurityConfig {
             JwtFilter jwtFilter,
             DaoAuthenticationProvider daoAuthenticationProvider,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-            CustomAccessDeniedHandler customAccessDeniedHandler
+            CustomAccessDeniedHandler customAccessDeniedHandler,
+            CustomOidcUserService customOidcUserService,
+            OAuth2SuccessHandler oAuth2SuccessHandler,
+            Oauth2FailureHandler oauth2FailureHandler
     ) throws Exception {
         return http
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(customOidcUserService))
+                        .successHandler(oAuth2SuccessHandler)
+                        .failureHandler(oauth2FailureHandler)
+                )
                 .authenticationProvider(daoAuthenticationProvider)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
-                .anonymous(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/sign-up", "/auth/sign-in", "/auth/refresh", "/auth/verify-account", "/auth/logout").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterAfter(jwtFilter, LogoutFilter.class)
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .exceptionHandling(handler -> handler
                         .accessDeniedHandler(customAccessDeniedHandler)
-                )
+                        .authenticationEntryPoint(customAuthenticationEntryPoint))
                 .build();
     }
 
