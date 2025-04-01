@@ -28,6 +28,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
@@ -39,7 +40,7 @@ public class AuthController {
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = {@ExampleObject("{\"message\": \"User already exists\", \"status\": \"409\"}")}
+                            examples = {@ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"User already exists\",\t\"status\": 409}")}
                     )
 
             )
@@ -69,7 +70,7 @@ public class AuthController {
                     description = "Invalid email or password",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Bad credentials\", \"status\": \"401\"}")
+                            examples = @ExampleObject("{\"code\": \"Unauthorized\",\t\"message\": \"Bad credentials\", \t\"status\": 401}")
                     )
             )
     })
@@ -82,6 +83,7 @@ public class AuthController {
             response.addCookie(tokens.refreshTokenCookie());
             return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
+
 
     @ApiResponses({
             @ApiResponse(
@@ -101,7 +103,7 @@ public class AuthController {
                     description = "Token validation fail",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Token validation fail\", \"status\": \"401\"}")
+                            examples = @ExampleObject("{\"code\": \"Unauthorized\",\t\"message\": \"Token is invalid\", \t\"status\": 401}")
                     )
             )
     })
@@ -119,6 +121,7 @@ public class AuthController {
         response.addCookie(tokens.refreshTokenCookie());
         return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
+
 
     @ApiResponses({
             @ApiResponse(
@@ -140,7 +143,7 @@ public class AuthController {
                     description = "Refresh token was not provided",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Logout failed\", \"status\": \"400\"}")
+                            examples = @ExampleObject("{\"code\": \"Bad request\",\t\"message\": \"Logout error\", \t\"status\": 400}")
                     )
 
             )
@@ -164,6 +167,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully");
     }
 
+
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -177,7 +181,7 @@ public class AuthController {
                     description = "Code is invalid or expired",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"Verification code is expired\", \"status\": \"400\"}")
+                            examples = @ExampleObject("{\"code\": \"Bad request\",\t\"message\": \"Verification code expired\", \t\"status\": 400}")
                     )
             ),
             @ApiResponse(
@@ -185,7 +189,7 @@ public class AuthController {
                     description = "Code is valid, but user does not exist",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"message\": \"User does not exist\", \"status\": \"409\"}")
+                            examples = @ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"User already exists\",\t\"status\": 409}")
                     )
             )
     })
