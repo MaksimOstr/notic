@@ -1,6 +1,5 @@
 package com.notic.config.security.model;
 
-import com.notic.entity.Role;
 import lombok.Getter;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;

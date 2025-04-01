@@ -44,7 +44,6 @@ public class AuthService {
    }
 
    public TokenResponse signIn(SignInDto body) {
-       System.out.println("test");
         Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
         authenticationManager.authenticate(authReq);
         User user = userService.getUserByEmailWithRoles(body.email())

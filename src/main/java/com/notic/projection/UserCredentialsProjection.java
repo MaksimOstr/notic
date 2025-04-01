@@ -1,6 +1,6 @@
 package com.notic.projection;
 
-import com.notic.entity.Role;
+import com.notic.enums.AuthProviderEnum;
 import java.util.Set;
 
 public interface UserCredentialsProjection {
@@ -9,5 +9,6 @@ public interface UserCredentialsProjection {
     String getPassword();
     boolean isAccountNonLocked();
     boolean isEnabled();
+    AuthProviderEnum getAuthProvider();
     Set<String> getRoleNames();
 }

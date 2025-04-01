@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,7 +32,7 @@ public class UserService {
         if(userRepository.existsByEmail(body.email())) {
             throw new EntityAlreadyExistsException("User already exists");
         }
-
+        
         Role defaultRole = roleService.getDefaultRole();
 
         User user = new User(
@@ -40,6 +42,10 @@ public class UserService {
                 Set.of(defaultRole)
         );;
 
+        return userRepository.save(user);
+    }
+
+    public User saveUser(User user) {
         return userRepository.save(user);
     }
 
@@ -56,8 +62,9 @@ public class UserService {
         return userRepository.findUserForAuthByEmail(email);
     }
 
-    public Optional<UserCredentialsProjection> getUserForAuthById(long id) {
-        return userRepository.findUserForAuthById(id);
+    public Optional<JwtAuthUserProjection> getUserForJwtAuth(long id) {
+        return userRepository.findUserForJwtAuthById(id);
+
     }
 
     public void markUserAsVerified(long id) {
@@ -72,10 +79,5 @@ public class UserService {
         if(updated == 0) {
             throw new EntityDoesNotExistsException("User not found");
         }
-    }
-
-    public Optional<JwtAuthUserProjection> getUserForJwtAuth(long id) {
-        return userRepository.findUserForJwtAuthById(id);
-
     }
 }
