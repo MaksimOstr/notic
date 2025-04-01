@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,7 +32,7 @@ public class UserService {
         if(userRepository.existsByEmail(body.email())) {
             throw new EntityAlreadyExistsException("User already exists");
         }
-
+        
         Role defaultRole = roleService.getDefaultRole();
 
         User user = new User(

@@ -52,12 +52,6 @@ public class SecurityConfig {
             Oauth2FailureHandler oauth2FailureHandler
     ) throws Exception {
         return http
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .oidcUserService(customOidcUserService))
-                        .successHandler(oAuth2SuccessHandler)
-                        .failureHandler(oauth2FailureHandler)
-                )
                 .authenticationProvider(daoAuthenticationProvider)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -65,6 +59,12 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
                         .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(customOidcUserService))
+                        .successHandler(oAuth2SuccessHandler)
+                        .failureHandler(oauth2FailureHandler)
+                )
                 .addFilterAfter(jwtFilter, LogoutFilter.class)
                 .exceptionHandling(handler -> handler
                         .accessDeniedHandler(customAccessDeniedHandler)
