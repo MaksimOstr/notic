@@ -34,6 +34,7 @@ public class Friendship implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private User receiver;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private FriendshipStatusEnum status;
 

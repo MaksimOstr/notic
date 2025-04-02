@@ -9,10 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/friendships")
@@ -26,6 +23,24 @@ public class FriendshipController {
             @Valid @RequestBody CreateFriendshipDto body
             ) {
         friendshipService.createFriendship(principal.getId(), body.receiverId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/accept")
+    public ResponseEntity<?> acceptFriendship(
+            @AuthenticationPrincipal JwtAuthUserProjection principal,
+            @PathVariable long id
+    ) {
+        friendshipService.acceptFriendship(id, principal.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<?> rejectFriendship(
+            @AuthenticationPrincipal JwtAuthUserProjection principal,
+            @PathVariable long id
+    ) {
+        friendshipService.rejectFriendship(id, principal.getId());
         return ResponseEntity.ok().build();
     }
 }
