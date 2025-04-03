@@ -1,45 +1,44 @@
 package com.notic.entity;
 
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import java.time.Instant;
 
+import java.time.Instant;
 
 @Entity
 @Table(
-        name = "friendships",
+        name = "friendship_requests",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "unique_pair",
-                        columnNames = {"user1_id", "user2_id"}
+                        columnNames = {"sender_id", "receiver_id"}
                 )
         }
 )
 @NoArgsConstructor
-@Setter
 @Getter
+@Setter
 @EntityListeners(AuditingEntityListener.class)
-public class Friendship {
+public class FriendshipRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private User user1;
+    private User sender;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private User user2;
+    private User receiver;
 
     @CreatedDate
-    private Instant friendshipDate;
+    private Instant createdAt;
 
-    public Friendship(User user1, User user2) {
-        this.user1 = user1;
-        this.user2 = user2;
+    public FriendshipRequest(User sender, User receiver) {
+        this.sender = sender;
+        this.receiver = receiver;
     }
 }

@@ -2,8 +2,7 @@ package com.notic.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-public record CreateFriendshipDto(
-
+public record SendFriendshipRequestDto(
         @NotNull
         Long receiverId
 ) {}

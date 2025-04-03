@@ -85,7 +85,7 @@ public class User {
         }
 
         if(enabled == null) {
-            enabled = false;
+            enabled = true;
         }
     }
 }
