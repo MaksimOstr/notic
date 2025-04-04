@@ -6,8 +6,11 @@ import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.FriendshipException;
+import com.notic.projection.FriendshipRequestProjection;
 import com.notic.repository.FriendshipRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import static com.notic.criteria.FriendshipRequestCriteria.*;
@@ -47,6 +50,10 @@ public class FriendshipRequestService {
         friendshipRequestRepository.save(friendshipRequest);
     }
 
+    @Transactional(readOnly = true)
+    public Page<FriendshipRequestProjection> getAllFriendshipRequests(long receiverId, Pageable pageable) {
+        return friendshipRequestRepository.getAllFriendshipRequests(receiverId, pageable);
+    }
 
     @Transactional
     public void acceptFriendshipRequest(long requestId, long receiverId) {
@@ -61,7 +68,16 @@ public class FriendshipRequestService {
                 request.getSender().getId(),
                 receiverId
         );
-        friendshipRequestRepository.deleteFriendshipRequestById(request.getId());
+        friendshipRequestRepository.deleteById(request.getId());
+    }
+
+    @Transactional
+    public void rejectFriendshipRequest(long requestId, long receiverId) {
+        int delete = friendshipRequestRepository.rejectFriendshipRequest(requestId, receiverId);
+
+        if(delete == 0) {
+            throw new FriendshipException("Friendship error");
+        }
     }
 
 

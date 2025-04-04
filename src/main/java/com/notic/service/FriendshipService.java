@@ -3,8 +3,8 @@ package com.notic.service;
 import com.notic.entity.Friendship;
 import com.notic.entity.User;
 import com.notic.exception.EntityDoesNotExistsException;
-import com.notic.mapper.UserMapper;
-import com.notic.projection.FriendshipDto;
+import com.notic.exception.FriendshipException;
+import com.notic.projection.FriendshipProjection;
 import com.notic.repository.FriendshipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,7 +19,6 @@ import static com.notic.criteria.FriendshipCriteria.existsFriendshipCriteria;
 public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
     private final UserService userService;
-    private final UserMapper userMapper;
 
     private record FriendsPair(User user1, User user2) {}
 
@@ -31,14 +30,25 @@ public class FriendshipService {
         friendshipRepository.save(friendship);
     }
 
+    
     @Transactional(readOnly = true)
-    public Page<FriendshipDto> getFriendships(long userId, Pageable pageable) {
+    public Page<FriendshipProjection> getFriendships(long userId, Pageable pageable) {
         return friendshipRepository.findFriendshipsByUser(userId, pageable);
     }
+
 
     public boolean isFriendshipExistsByUserId(long userId1, long userId2) {
         return friendshipRepository.exists(existsFriendshipCriteria(userId1, userId2));
     }
+
+    public void deleteFriendship(long friendshipId, long userId) {
+        int delete = friendshipRepository.removeFriendship(friendshipId, userId);
+
+        if(delete == 0) {
+            throw new FriendshipException("Friendship was not found");
+        }
+    }
+
 
     private FriendsPair getFriendsPair(long userId1, long userId2) {
         User user1 = userService.getUserById(userId1)

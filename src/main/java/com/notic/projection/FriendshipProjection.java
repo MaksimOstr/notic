@@ -2,7 +2,7 @@ package com.notic.projection;
 
 import java.time.Instant;
 
-public record FriendshipDto(
+public record FriendshipProjection(
         long friendId,
         String friendName,
         String friendAvatar,
