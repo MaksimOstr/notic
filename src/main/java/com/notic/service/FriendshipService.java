@@ -44,7 +44,7 @@ public class FriendshipService {
     public void deleteFriendship(long friendshipId, long userId) {
         int delete = friendshipRepository.removeFriendship(friendshipId, userId);
 
-        if(delete == 0) {
+        if (delete == 0) {
             throw new FriendshipException("Friendship was not found");
         }
     }

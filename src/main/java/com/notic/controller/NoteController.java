@@ -79,6 +79,31 @@ public class NoteController {
         return ResponseEntity.ok(pageOfNotes);
     }
 
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Friend's notes successfully received"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "If user (friends) does not exists or you are not a friends",
+                    content = @Content(
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = @ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"Friend was not found\",\t\"status\": 409}")
+                    )
+            )
+    })
+    @GetMapping("/author/{id}")
+    public ResponseEntity<Page<Note>> getFriendNotes(
+            @PathVariable("id") Long friendId,
+            @AuthenticationPrincipal JwtAuthUserProjection principal
+    ) {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Note> friendPageOfNotes = noteService.getFriendPageOfNotes(principal.getId(), friendId, pageable);
+
+        return ResponseEntity.ok(friendPageOfNotes);
+    }
+
 
     @ApiResponses({
             @ApiResponse(

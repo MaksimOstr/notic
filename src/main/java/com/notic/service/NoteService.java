@@ -4,6 +4,7 @@ import com.notic.dto.CreateNoteDto;
 import com.notic.dto.UpdateNoteDto;
 import com.notic.entity.Note;
 import com.notic.entity.User;
+import com.notic.enums.NoteVisibilityEnum;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +13,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class NoteService {
 
     private final NoteRepository noteRepository;
     private final UserService userService;
+    private final FriendshipService friendshipService;
 
 
     @Transactional(rollbackFor = EntityDoesNotExistsException.class)
@@ -36,8 +40,36 @@ public class NoteService {
         return noteRepository.save(note);
     }
 
+
     public Page<Note> getPageOfNotes(long userId, Pageable pageable) {
-        return noteRepository.findByAuthor_Id(userId, pageable);
+        List<String> visibility = List.of(
+                NoteVisibilityEnum.PUBLIC.name(),
+                NoteVisibilityEnum.PROTECTED.name(),
+                NoteVisibilityEnum.PRIVATE.name()
+        );
+        return noteRepository.findByAuthor_Id(userId, visibility, pageable);
+    }
+
+
+    public Page<Note> getFriendPageOfNotes(long userId, long friendId, Pageable pageable) {
+
+        boolean isUser = userService.isUserExistsById(friendId);
+
+        if(!isUser) {
+            throw new EntityDoesNotExistsException("Friend was not found");
+        }
+
+        boolean isFriends = friendshipService.isFriendshipExistsByUserId(friendId, userId);
+
+        if(!isFriends) {
+            throw new EntityDoesNotExistsException("Friendship was not found");
+        }
+
+        List<String> visibility = List.of(
+                NoteVisibilityEnum.PUBLIC.name(),
+                NoteVisibilityEnum.PROTECTED.name()
+        );
+        return noteRepository.findByAuthor_Id(friendId, visibility, pageable);
     }
 
 

@@ -45,6 +45,10 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public boolean isUserExistsById(long id) {
+        return userRepository.existsById(id);
+    }
+
     public User saveUser(User user) {
         return userRepository.save(user);
     }
