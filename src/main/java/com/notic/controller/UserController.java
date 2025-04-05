@@ -44,6 +44,11 @@ public class UserController {
                     file.getContentType()
             );
 
+            Optional<GetUserAvatarProjection> avatarOptional = userService.getUserAvatarById(userId);
+            if (avatarOptional.isPresent()) {
+                GetUserAvatarProjection avatar = avatarOptional.get();
+                s3Service.deleteUserAvatar(avatar.getAvatar());
+            }
             String url =  s3Service.uploadUserAvatar(dto);
             userService.updateUserAvatarById(userId, url);
 
