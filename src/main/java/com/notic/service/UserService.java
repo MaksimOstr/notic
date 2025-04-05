@@ -7,13 +7,13 @@ import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
+import com.notic.projection.GetUserAvatarProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -43,6 +43,10 @@ public class UserService {
         );;
 
         return userRepository.save(user);
+    }
+
+    public Optional<GetUserAvatarProjection> getUserAvatarById(long id) {
+        return userRepository.getUserAvatarUrlById(id);
     }
 
     public boolean isUserExistsById(long id) {

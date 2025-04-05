@@ -1,18 +1,23 @@
 package com.notic.controller;
 
 import com.notic.dto.CustomPutObjectDto;
+import com.notic.exception.UploadFileException;
+import com.notic.projection.GetUserAvatarProjection;
 import com.notic.projection.JwtAuthUserProjection;
 import com.notic.service.S3Service;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RestController
