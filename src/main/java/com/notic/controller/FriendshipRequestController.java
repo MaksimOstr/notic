@@ -1,13 +1,12 @@
 package com.notic.controller;
 
 
+import com.notic.dto.JwtAuthUserDto;
 import com.notic.dto.SendFriendshipRequestDto;
 import com.notic.projection.FriendshipRequestProjection;
-import com.notic.projection.JwtAuthUserProjection;
 import com.notic.response.ApiErrorResponse;
 import com.notic.service.FriendshipRequestService;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -36,7 +35,7 @@ public class FriendshipRequestController {
     })
     @GetMapping
     public ResponseEntity<Page<FriendshipRequestProjection>> getAllFriendshipRequests(
-            @AuthenticationPrincipal JwtAuthUserProjection user,
+            @AuthenticationPrincipal JwtAuthUserDto user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
 
@@ -64,9 +63,9 @@ public class FriendshipRequestController {
                     )
             )
     })
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<?> sendFriendshipRequest(
-            @AuthenticationPrincipal JwtAuthUserProjection user,
+            @AuthenticationPrincipal JwtAuthUserDto user,
             @RequestBody @Valid SendFriendshipRequestDto friendshipRequest
     ) {
         friendshipRequestService.createRequest(user.getId(), friendshipRequest.receiverId());
@@ -93,7 +92,7 @@ public class FriendshipRequestController {
     @PostMapping("/{id}/accept")
     public ResponseEntity<?> acceptFriendshipRequest(
             @PathVariable("id") long requestId,
-            @AuthenticationPrincipal JwtAuthUserProjection user
+            @AuthenticationPrincipal JwtAuthUserDto user
     ) {
         friendshipRequestService.acceptFriendshipRequest(requestId, user.getId());
         return ResponseEntity.ok().build();
@@ -112,7 +111,7 @@ public class FriendshipRequestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFriendshipRequest(
             @PathVariable("id") long requestId,
-            @AuthenticationPrincipal JwtAuthUserProjection user
+            @AuthenticationPrincipal JwtAuthUserDto user
     ) {
         friendshipRequestService.rejectFriendshipRequest(requestId, user.getId());
 
