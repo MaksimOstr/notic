@@ -2,6 +2,7 @@ package com.notic.mapper;
 
 
 import com.notic.dto.UserDto;
+import com.notic.dto.UserFriendDto;
 import com.notic.entity.User;
 import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
@@ -19,6 +20,8 @@ public interface UserMapper {
     @Mapping(source = "username", target = "username")
     @Mapping(source = "email", target = "email")
     UserDto toDto(User user);
+
+    UserFriendDto toFriendDto(User user);
 
     @Mapping(source = "roleNames", target = "authorities")
     @Mapping(source = "id", target = "userId")

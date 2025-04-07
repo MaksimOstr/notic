@@ -1,5 +1,6 @@
 package com.notic.config.security.filter;
 
+import com.notic.dto.JwtAuthUserDto;
 import com.notic.exception.AuthenticationFlowException;
 import com.notic.projection.JwtAuthUserProjection;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
@@ -75,9 +76,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private void authenticateUser(JwtAuthUserProjection user, Collection<String> roles, HttpServletRequest request) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
-
+        JwtAuthUserDto userAuth = new JwtAuthUserDto(user.getId());
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                user,
+                userAuth,
                 null,
                 roles.stream().map(SimpleGrantedAuthority::new).toList()
         );
