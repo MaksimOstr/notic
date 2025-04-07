@@ -23,7 +23,7 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long>, J
         WHERE (f.user1.id = :userId OR f.user2.id = :userId)
         ORDER BY f.friendshipDate DESC
     """)
-    Page<FriendshipProjection> findFriendshipsByUser(@Param("userId") long userId, Pageable pageable);
+    Page<FriendshipProjection> findFriendshipsByUserId(@Param("userId") long userId, Pageable pageable);
 
 
     @Modifying

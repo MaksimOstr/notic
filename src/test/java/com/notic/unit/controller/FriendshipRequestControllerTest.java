@@ -180,17 +180,17 @@ public class FriendshipRequestControllerTest {
         }
     }
 
-        @Test
-        void shouldAcceptRequest() throws Exception {
-            long requestId = 2L;
+    @Test
+    void shouldAcceptRequest() throws Exception {
+        long requestId = 2L;
 
-            doNothing().when(friendshipRequestService).acceptFriendshipRequest(anyLong(), anyLong());
+        doNothing().when(friendshipRequestService).acceptFriendshipRequest(anyLong(), anyLong());
 
-            mockMvc.perform(post("/friendship-requests/{id}/accept", requestId))
-                    .andExpect(status().isOk());
+        mockMvc.perform(post("/friendship-requests/{id}/accept", requestId))
+                .andExpect(status().isOk());
 
-            verify(friendshipRequestService, times(1)).acceptFriendshipRequest(eq(requestId), eq(user.getId()));
-        }
+        verify(friendshipRequestService, times(1)).acceptFriendshipRequest(eq(requestId), eq(user.getId()));
+    }
 
 
     @Test

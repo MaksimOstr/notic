@@ -22,7 +22,6 @@ public class FriendshipService {
 
     private record FriendsPair(User user1, User user2) {}
 
-
     public void createFriendship(long userId1, long userId2) {
         FriendsPair pair = getFriendsPair(userId1, userId2);
         Friendship friendship = new Friendship(pair.user1(), pair.user2());
@@ -33,9 +32,8 @@ public class FriendshipService {
     
     @Transactional(readOnly = true)
     public Page<FriendshipProjection> getFriendships(long userId, Pageable pageable) {
-        return friendshipRepository.findFriendshipsByUser(userId, pageable);
+        return friendshipRepository.findFriendshipsByUserId(userId, pageable);
     }
-
 
     public boolean isFriendshipExistsByUserId(long userId1, long userId2) {
         return friendshipRepository.exists(existsFriendshipCriteria(userId1, userId2));

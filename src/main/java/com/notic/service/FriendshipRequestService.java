@@ -50,10 +50,12 @@ public class FriendshipRequestService {
         friendshipRequestRepository.save(friendshipRequest);
     }
 
+
     @Transactional(readOnly = true)
     public Page<FriendshipRequestProjection> getAllFriendshipRequests(long receiverId, Pageable pageable) {
         return friendshipRequestRepository.getAllFriendshipRequests(receiverId, pageable);
     }
+
 
     @Transactional
     public void acceptFriendshipRequest(long requestId, long receiverId) {
@@ -70,6 +72,7 @@ public class FriendshipRequestService {
         );
         friendshipRequestRepository.deleteById(request.getId());
     }
+
 
     @Transactional
     public void rejectFriendshipRequest(long requestId, long receiverId) {
