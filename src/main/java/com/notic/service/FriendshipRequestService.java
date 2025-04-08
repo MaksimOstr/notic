@@ -3,12 +3,15 @@ package com.notic.service;
 
 import com.notic.entity.FriendshipRequest;
 import com.notic.entity.User;
+import com.notic.event.FriendshipRequestAcceptEvent;
+import com.notic.event.FriendshipRequestCreatedEvent;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.FriendshipException;
 import com.notic.projection.FriendshipRequestProjection;
 import com.notic.repository.FriendshipRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class FriendshipRequestService {
     private final FriendshipRequestRepository friendshipRequestRepository;
     private final FriendshipService friendshipService;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private record FriendsPair(User sender, User receiver) {}
 
@@ -45,9 +49,16 @@ public class FriendshipRequestService {
         }
 
         FriendsPair pair = getFriendsPair(senderId, receiverId);
+        System.out.println(pair.sender().getUsername() + " " + pair.receiver().getUsername());
+
         FriendshipRequest friendshipRequest = new FriendshipRequest(pair.sender(), pair.receiver());
 
         friendshipRequestRepository.save(friendshipRequest);
+        eventPublisher.publishEvent(new FriendshipRequestCreatedEvent(
+                Long.toString(receiverId),
+                pair.sender().getUsername(),
+                pair.sender().getAvatar()
+        ));
     }
 
 
@@ -63,7 +74,7 @@ public class FriendshipRequestService {
                 .orElseThrow(() -> new EntityDoesNotExistsException("Friendship request not found"));
 
         if(request.getReceiver().getId() != receiverId) {
-            throw new FriendshipException("Friendship update error");
+            throw new FriendshipException("Friendship accept error");
         }
 
         friendshipService.createFriendship(
@@ -71,6 +82,13 @@ public class FriendshipRequestService {
                 receiverId
         );
         friendshipRequestRepository.deleteById(request.getId());
+        System.out.println(request.getSender().getUsername() + " " + request.getReceiver().getUsername());
+
+        eventPublisher.publishEvent(new FriendshipRequestAcceptEvent(
+                Long.toString(request.getSender().getId()),
+                request.getReceiver().getUsername(),
+                request.getReceiver().getAvatar()
+        ));
     }
 
 

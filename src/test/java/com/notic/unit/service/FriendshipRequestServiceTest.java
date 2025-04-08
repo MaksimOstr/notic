@@ -1,19 +1,15 @@
 package com.notic.unit.service;
 
-import com.notic.entity.Friendship;
 import com.notic.entity.FriendshipRequest;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.FriendshipException;
-import com.notic.projection.FriendshipProjection;
 import com.notic.projection.FriendshipRequestProjection;
 import com.notic.repository.FriendshipRequestRepository;
 import com.notic.service.FriendshipRequestService;
 import com.notic.service.FriendshipService;
 import com.notic.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
-import net.bytebuddy.asm.Advice;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,16 +18,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -40,6 +35,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class FriendshipRequestServiceTest {
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private FriendshipRequestRepository friendshipRequestRepository;

@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor

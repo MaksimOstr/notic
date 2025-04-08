@@ -1,6 +1,5 @@
 package com.notic.controller;
 
-
 import com.notic.dto.JwtAuthUserDto;
 import com.notic.dto.SendFriendshipRequestDto;
 import com.notic.projection.FriendshipRequestProjection;
@@ -19,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/friendship-requests")

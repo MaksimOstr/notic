@@ -5,7 +5,6 @@ import com.notic.enums.NoteVisibilityEnum;
 import com.notic.validators.ValueOfEnum;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-
 import java.util.Optional;
 
 @RequiredArgsConstructor
