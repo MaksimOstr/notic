@@ -5,6 +5,8 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.projection.GetUserAvatarProjection;
+import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.repository.UserRepository;
 import com.notic.service.RoleService;
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import java.util.Set;
@@ -59,10 +63,10 @@ public class UserServiceTest {
             User result = userService.createUser(createUserDto);
 
 
-            verify(roleService, times(1)).getDefaultRole();
-            verify(passwordEncoder, times(1)).encode(createUserDto.password());
-            verify(userRepository, times(1)).save(createdUser);
-            verify(userRepository, times(1)).existsByEmail(createUserDto.email());
+            verify(roleService).getDefaultRole();
+            verify(passwordEncoder).encode(createUserDto.password());
+            verify(userRepository).save(createdUser);
+            verify(userRepository).existsByEmail(createUserDto.email());
 
 
 
@@ -82,7 +86,7 @@ public class UserServiceTest {
             Exception result = assertThrows(EntityAlreadyExistsException.class, () -> userService.createUser(createUserDto));
             assertEquals("User already exists", result.getMessage());
 
-            verify(userRepository, times(1)).existsByEmail(createUserDto.email());
+            verify(userRepository).existsByEmail(createUserDto.email());
             verify(roleService, never()).getDefaultRole();
             verify(userRepository, never()).save(any(User.class));
             verify(passwordEncoder, never()).encode(anyString());
@@ -116,7 +120,7 @@ public class UserServiceTest {
 
 
                 assertNotNull(result);
-                verify(userRepository, times(1)).findByEmail(email);
+                verify(userRepository).findByEmail(email);
                 assertEquals(user, result);
             }
         }
@@ -134,7 +138,7 @@ public class UserServiceTest {
 
             Optional<User> result = userService.getUserByEmailWithRoles(email);
 
-            verify(userRepository, times(1)).findByEmailWithRoles(email);
+            verify(userRepository).findByEmailWithRoles(email);
 
             assertFalse(result.isPresent());
         }
@@ -147,7 +151,7 @@ public class UserServiceTest {
 
             assertTrue(result.isPresent());
             assertNotNull(result.get());
-            verify(userRepository, times(1)).findByEmailWithRoles(email);
+            verify(userRepository).findByEmailWithRoles(email);
             assertEquals(user, result.get());
         }
     }
@@ -164,7 +168,7 @@ public class UserServiceTest {
 
             assertFalse(result.isPresent());
 
-            verify(userRepository, times(1)).findUserForAuthByEmail(email);
+            verify(userRepository).findUserForAuthByEmail(email);
         }
 
         @Test
@@ -177,7 +181,137 @@ public class UserServiceTest {
 
             assertTrue(result.isPresent());
 
-            verify(userRepository, times(1)).findUserForAuthByEmail(email);
+            verify(userRepository).findUserForAuthByEmail(email);
         }
+    }
+
+    @Nested
+    class MarkUserAsVerified {
+        private final long userId = 1L;
+
+        @Test
+        void shouldThrowExceptionWhenUserDoesNotExist() {
+            when(userRepository.updateEnabledStatusById(anyLong(), anyBoolean())).thenReturn(0);
+
+            assertThrows(EntityDoesNotExistsException.class, () -> userService.markUserAsVerified(userId));
+
+            verify(userRepository).updateEnabledStatusById(userId, true);
+        }
+
+        @Test
+        void shouldMarkUserAsVerified() {
+            when(userRepository.updateEnabledStatusById(anyLong(), anyBoolean())).thenReturn(1);
+
+            userService.markUserAsVerified(userId);
+
+            verify(userRepository).updateEnabledStatusById(userId, true);
+        }
+    }
+
+    @Test
+    void getUserAvatarById() {
+        long userId = 1L;
+
+        ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+
+        GetUserAvatarProjection projection = factory.createProjection(
+                GetUserAvatarProjection.class,
+                new Object[]{"avatarUrl"}
+        );
+
+        when(userRepository.getUserAvatarUrlById(anyLong())).thenReturn(Optional.of(projection));
+
+        Optional<GetUserAvatarProjection> result = userService.getUserAvatarById(userId);
+
+        verify(userRepository).getUserAvatarUrlById(userId);
+
+        assertTrue(result.isPresent());
+        assertEquals(projection, result.get());
+    }
+
+    @Test
+    void isUserExistsById() {
+        long userId = 1L;
+
+        when(userRepository.existsById(anyLong())).thenReturn(true);
+
+        boolean result = userService.isUserExistsById(userId);
+
+        verify(userRepository).existsById(userId);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void saveUser() {
+        User user = new User();
+
+        when(userRepository.save(user)).thenReturn(user);
+
+        User result = userService.saveUser(user);
+
+        verify(userRepository).save(user);
+
+        assertNotNull(result);
+        assertEquals(user, result);
+    }
+
+    @Test
+    void getUserById() {
+        long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+
+        Optional<User> result = userService.getUserById(userId);
+
+        verify(userRepository).findById(userId);
+
+        assertTrue(result.isPresent());
+        assertEquals(user.getId(), result.get().getId());
+    }
+
+    @Nested
+    class UpdateUserAvatarById {
+        private final long userId = 1L;
+        private final String avatarUrl = "avatarUrl";
+
+        @Test
+        void shouldThrowExceptionWhenUserDoesNotExist() {
+            when(userRepository.updateUserAvatarById(anyLong(), anyString())).thenReturn(0);
+
+            assertThrows(EntityDoesNotExistsException.class, () -> userService.updateUserAvatarById(userId, avatarUrl));
+
+            verify(userRepository).updateUserAvatarById(userId, avatarUrl);
+        }
+
+        @Test
+        void shouldMarkUserAsVerified() {
+            when(userRepository.updateUserAvatarById(anyLong(), anyString())).thenReturn(1);
+
+            userService.updateUserAvatarById(userId, avatarUrl);
+
+            verify(userRepository).updateUserAvatarById(userId, avatarUrl);
+        }
+    }
+
+    @Test
+    void getUserForJwtAuth() {
+        long userId = 1L;
+        ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+        JwtAuthUserProjection projection = factory.createProjection(
+                JwtAuthUserProjection.class,
+                new Object[]{userId}
+        );
+
+        when(userRepository.findUserForJwtAuthById(anyLong())).thenReturn(Optional.of(projection));
+
+        Optional<JwtAuthUserProjection> result = userService.getUserForJwtAuth(userId);
+
+        verify(userRepository).findUserForJwtAuthById(userId);
+
+        assertTrue(result.isPresent());
+        assertEquals(projection, result.get());
     }
 }

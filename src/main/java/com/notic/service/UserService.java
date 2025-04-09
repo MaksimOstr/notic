@@ -75,7 +75,6 @@ public class UserService {
 
     public Optional<JwtAuthUserProjection> getUserForJwtAuth(long id) {
         return userRepository.findUserForJwtAuthById(id);
-
     }
 
     public void markUserAsVerified(long id) {
