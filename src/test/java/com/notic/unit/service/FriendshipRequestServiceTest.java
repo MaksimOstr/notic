@@ -2,6 +2,8 @@ package com.notic.unit.service;
 
 import com.notic.entity.FriendshipRequest;
 import com.notic.entity.User;
+import com.notic.event.FriendshipRequestAcceptEvent;
+import com.notic.event.FriendshipRequestCreatedEvent;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.FriendshipException;
@@ -10,6 +12,7 @@ import com.notic.repository.FriendshipRequestRepository;
 import com.notic.service.FriendshipRequestService;
 import com.notic.service.FriendshipService;
 import com.notic.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,6 +69,7 @@ public class FriendshipRequestServiceTest {
             verify(friendshipRequestRepository, never()).exists(Mockito.<Specification<FriendshipRequest>>any());
             verify(friendshipService, never()).isFriendshipExistsByUserId(anyLong(), anyLong());
             verify(friendshipRequestRepository, never()).save(any());
+            verify(eventPublisher, never()).publishEvent(any(FriendshipRequestCreatedEvent.class));
         }
 
         @Test
@@ -79,6 +83,7 @@ public class FriendshipRequestServiceTest {
             verify(friendshipRequestRepository, times(1)).exists(Mockito.<Specification<FriendshipRequest>>any());
             verify(friendshipService, never()).isFriendshipExistsByUserId(anyLong(), anyLong());
             verify(friendshipRequestRepository, never()).save(any());
+            verify(eventPublisher, never()).publishEvent(any(FriendshipRequestCreatedEvent.class));
         }
 
         @Test
@@ -93,22 +98,24 @@ public class FriendshipRequestServiceTest {
             verify(friendshipRequestRepository).exists(Mockito.<Specification<FriendshipRequest>>any());
             verify(friendshipService).isFriendshipExistsByUserId(senderId, receiverId);
             verify(friendshipRequestRepository, never()).save(any());
+            verify(eventPublisher, never()).publishEvent(any(FriendshipRequestCreatedEvent.class));
         }
 
         @Test
         void shouldCreateFriendshipRequest() {
-            User user1 = new User("Ivan", "test", "pass", Set.of());
-            User user2 = new User("Oleg", "test", "pass", Set.of());
+            User sender = new User("Ivan", "test", "pass", Set.of());
+            User receiver = new User("Oleg", "test", "pass", Set.of());
 
-            user1.setId(senderId);
-            user2.setId(receiverId);
+            sender.setId(senderId);
+            receiver.setId(receiverId);
 
             ArgumentCaptor<FriendshipRequest> captor = ArgumentCaptor.forClass(FriendshipRequest.class);
+            ArgumentCaptor<FriendshipRequestCreatedEvent> eventCaptor = ArgumentCaptor.forClass(FriendshipRequestCreatedEvent.class);
 
             when(friendshipRequestRepository.exists(Mockito.<Specification<FriendshipRequest>>any())).thenReturn(false);
             when(friendshipService.isFriendshipExistsByUserId(anyLong(), anyLong())).thenReturn(false);
-            when(userService.getUserById(senderId)).thenReturn(Optional.of(user1));
-            when(userService.getUserById(receiverId)).thenReturn(Optional.of(user2));
+            when(userService.getUserById(senderId)).thenReturn(Optional.of(sender));
+            when(userService.getUserById(receiverId)).thenReturn(Optional.of(receiver));
 
             friendshipRequestService.createRequest(senderId, receiverId);
 
@@ -116,9 +123,15 @@ public class FriendshipRequestServiceTest {
             verify(friendshipRequestRepository).exists(Mockito.<Specification<FriendshipRequest>>any());
             verify(friendshipService).isFriendshipExistsByUserId(senderId, receiverId);
             verify(friendshipRequestRepository).save(any(FriendshipRequest.class));
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+            FriendshipRequestCreatedEvent createdEvent = eventCaptor.getValue();
 
             assertEquals(senderId, captor.getValue().getSender().getId());
             assertEquals(receiverId, captor.getValue().getReceiver().getId());
+            assertEquals(Long.toString(receiverId), createdEvent.receiverId());
+            assertEquals(sender.getUsername(), createdEvent.username());
+            assertEquals(sender.getAvatar(), createdEvent.avatarUrl());
         }
     }
 
@@ -144,6 +157,15 @@ public class FriendshipRequestServiceTest {
         private final long requestId = 2L;
         private final long receiverId = 3L;
 
+        private final User sender = new User("Ivan", "test", "pass", Set.of());
+        private final User receiver = new User("Oleg", "test", "pass", Set.of());
+
+        @BeforeEach
+        void beforeEach() {
+            sender.setId(senderId);
+            receiver.setId(receiverId);
+        }
+
 
         @Test
         void shouldThrowRequestIsNotFound() {
@@ -154,34 +176,29 @@ public class FriendshipRequestServiceTest {
             verify(friendshipRequestRepository).findById(requestId);
             verify(friendshipService, never()).createFriendship(anyLong(), anyLong());
             verify(friendshipRequestRepository, never()).deleteById(anyLong());
+            verify(eventPublisher, never()).publishEvent(any(FriendshipRequestAcceptEvent.class));
         }
 
         @Test
         void shouldThrowIfUserIsNotReceiver() {
-            User user1 = new User("Ivan", "test", "pass", Set.of());
-            User user2 = new User("Oleg", "test", "pass", Set.of());
+            long notReceiverId = 100L;
 
-            user1.setId(senderId);
-            user2.setId(senderId);
+            when(friendshipRequestRepository.findById(anyLong())).thenReturn(Optional.of(new FriendshipRequest(sender, receiver)));
 
-            when(friendshipRequestRepository.findById(anyLong())).thenReturn(Optional.of(new FriendshipRequest(user1, user2)));
-
-            assertThrows(FriendshipException.class, () -> friendshipRequestService.acceptFriendshipRequest(requestId, receiverId));
+            assertThrows(FriendshipException.class, () -> friendshipRequestService.acceptFriendshipRequest(requestId, notReceiverId));
 
             verify(friendshipRequestRepository).findById(requestId);
             verify(friendshipService, never()).createFriendship(anyLong(), anyLong());
             verify(friendshipRequestRepository, never()).deleteById(anyLong());
+            verify(eventPublisher, never()).publishEvent(any(FriendshipRequestAcceptEvent.class));
         }
 
         @Test
         void shouldCreateFriendshipRequest() {
-            User user1 = new User("Ivan", "test", "pass", Set.of());
-            User user2 = new User("Oleg", "test", "pass", Set.of());
 
-            user1.setId(senderId);
-            user2.setId(receiverId);
+            ArgumentCaptor<FriendshipRequestAcceptEvent> eventCaptor = ArgumentCaptor.forClass(FriendshipRequestAcceptEvent.class);
 
-            FriendshipRequest friendshipRequest = new FriendshipRequest(user1, user2);
+            FriendshipRequest friendshipRequest = new FriendshipRequest(sender, receiver);
             friendshipRequest.setId(requestId);
 
             when(friendshipRequestRepository.findById(anyLong())).thenReturn(Optional.of(friendshipRequest));
@@ -190,9 +207,16 @@ public class FriendshipRequestServiceTest {
 
             friendshipRequestService.acceptFriendshipRequest(requestId, receiverId);
 
-            verify(friendshipRequestRepository, times(1)).findById(requestId);
-            verify(friendshipService, times(1)).createFriendship(senderId, receiverId);
-            verify(friendshipRequestRepository, times(1)).deleteById(requestId);
+            verify(friendshipRequestRepository).findById(requestId);
+            verify(friendshipService).createFriendship(senderId, receiverId);
+            verify(friendshipRequestRepository).deleteById(requestId);
+            verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+            FriendshipRequestAcceptEvent capturedEvent = eventCaptor.getValue();
+
+            assertEquals(Long.toString(sender.getId()), capturedEvent.senderId());
+            assertEquals(receiver.getUsername(), capturedEvent.username());
+            assertEquals(receiver.getAvatar(), capturedEvent.avatarUrl());
         }
     }
 

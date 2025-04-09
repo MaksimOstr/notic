@@ -20,7 +20,7 @@ public class FriendshipRequestAcceptEventHandler {
         notificationService.friendshipRequestAccepted(
                 event.senderId(),
                 event.username(),
-                event.avatar()
+                event.avatarUrl()
         );
     }
 }
