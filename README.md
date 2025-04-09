@@ -10,7 +10,8 @@ This is a backend app which was meant for notes service. Such features was imple
   - PROTECTED - only friends can see this note.  
   - PRIVATE - only you can see this note.
 
-**User avatars**: You can change account's avatar and it will be saved in AWS s3 cloud storage
+**User avatars**: You can change account's avatar and it will be saved in AWS s3 cloud storage.  
+**Real-Time communiction**: Each frienship requesting or accepting request corresponding user will receive notification about this actions. It was implemented via Websockets (STOMP)
 
 
 ### 🛠 Tech stack:
