@@ -76,6 +76,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private void authenticateUser(JwtAuthUserProjection user, Collection<String> roles, HttpServletRequest request) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
+        System.out.println(user.getId());
         JwtAuthUserDto userAuth = new JwtAuthUserDto(user.getId());
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userAuth,

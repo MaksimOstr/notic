@@ -1,6 +1,5 @@
 package com.notic.controller;
 
-
 import com.notic.dto.JwtAuthUserDto;
 import com.notic.projection.FriendshipProjection;
 import com.notic.service.FriendshipService;
@@ -13,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/friendships")
