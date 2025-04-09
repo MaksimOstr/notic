@@ -33,12 +33,13 @@ public class Note {
     private User author;
 
     @Column(nullable = false)
-    private String visibility;
+    @Enumerated(EnumType.STRING)
+    private NoteVisibilityEnum visibility;
 
     @CreatedDate
     private Instant createdAt;
 
-    public Note(String title, String content, User author, String visibility) {
+    public Note(String title, String content, User author, NoteVisibilityEnum visibility) {
         this.title = title;
         this.content = content;
         this.author = author;

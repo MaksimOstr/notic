@@ -34,7 +34,7 @@ public class NoteService {
                 dto.title(),
                 dto.content(),
                 creator,
-                dto.visibility()
+                NoteVisibilityEnum.valueOf(dto.visibility())
         );
 
         return noteRepository.save(note);
@@ -79,7 +79,10 @@ public class NoteService {
 
         dto.getTitle().ifPresent(note::setTitle);
         dto.getContent().ifPresent(note::setContent);
-        dto.getVisibility().ifPresent(note::setVisibility);
+        dto.getVisibility()
+                .map(String::toUpperCase)
+                .map(NoteVisibilityEnum::valueOf)
+                .ifPresent(note::setVisibility);
 
         return note;
     }

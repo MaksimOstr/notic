@@ -6,6 +6,7 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.entity.VerificationCode;
 import com.notic.event.EmailVerificationEvent;
+import com.notic.exception.AuthenticationFlowException;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.TokenValidationException;
 import com.notic.mapper.UserMapper;
@@ -81,7 +82,7 @@ public class AuthServiceTest {
 
             Exception result = assertThrows(EntityAlreadyExistsException.class, () -> authService.signUp(createUserDto));
 
-            verify(userService, times(1)).createUser(createUserDto);
+            verify(userService).createUser(createUserDto);
 
             assertEquals(errorMsg, result.getMessage());
         }
@@ -96,9 +97,9 @@ public class AuthServiceTest {
             UserDto result = authService.signUp(createUserDto);
 
 
-            verify(userService, times(1)).createUser(createUserDto);
-            verify(userMapper, times(1)).toDto(user);
-            verify(applicationEventPublisher, times(1)).publishEvent(emailVerificationEventCaptor.capture());
+            verify(userService).createUser(createUserDto);
+            verify(userMapper).toDto(user);
+            verify(applicationEventPublisher).publishEvent(emailVerificationEventCaptor.capture());
 
             assertEquals(emailVerificationEventCaptor.getValue().code(), verificationCode.getCode());
             assertEquals(emailVerificationEventCaptor.getValue().email(), user.getEmail());
@@ -112,16 +113,15 @@ public class AuthServiceTest {
     @Nested
     class SignIn {
         private final SignInDto signInDto = new SignInDto("test@gmail.com", "12121212");
-
+        private final Authentication authRes = new UsernamePasswordAuthenticationToken(signInDto.email(), signInDto.password(), Set.of());
 
         @Test
         void InvalidCredentials() {
             when(authenticationManager.authenticate(any(Authentication.class))).thenThrow(new UsernameNotFoundException(""));
 
+            assertThrows(AuthenticationException.class, () -> authService.signIn(signInDto));
 
-            Exception result  = assertThrows(AuthenticationException.class, () -> authService.signIn(signInDto));
-
-            verify(authenticationManager, times(1)).authenticate(authenticationCaptor.capture());
+            verify(authenticationManager).authenticate(authenticationCaptor.capture());
             verifyNoInteractions(jwtService, refreshTokenService, userMapper, userService);
 
             assertFalse(authenticationCaptor.getValue().isAuthenticated());
@@ -129,11 +129,20 @@ public class AuthServiceTest {
             assertEquals(signInDto.password(), authenticationCaptor.getValue().getCredentials());
         }
 
+        @Test
+        void ValidCredentialsButUserDoesNotExist() {
+            when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authRes);
+            when(userService.getUserByEmailWithRoles(anyString())).thenReturn(Optional.empty());
+            assertThrows(AuthenticationFlowException.class, () -> authService.signIn(signInDto));
+
+            verify(authenticationManager).authenticate(any(Authentication.class));
+            verify(userService).getUserByEmailWithRoles(signInDto.email());
+            verifyNoInteractions(jwtService, refreshTokenService, userMapper);
+        }
+
 
         @Test
         void SuccessfullySignIn() {
-
-            Authentication authRes = new UsernamePasswordAuthenticationToken(signInDto.email(), signInDto.password(), Set.of());
             User user = new User("test", signInDto.email(), "hashed", Set.of());
             String accessToken = "accessToken";
             String refreshToken = "refreshToken";
@@ -147,11 +156,11 @@ public class AuthServiceTest {
 
             TokenResponse result = authService.signIn(signInDto);
 
-            verify(authenticationManager, times(1)).authenticate(any(Authentication.class));
-            verify(userService, times(1)).getUserByEmailWithRoles(signInDto.email());
-            verify(refreshTokenService, times(1)).getRefreshToken(user);
-            verify(refreshTokenService, times(1)).getRefreshTokenCookie(refreshToken);
-            verify(jwtService, times(1)).getJwsToken(any(), anyLong());
+            verify(authenticationManager).authenticate(any(Authentication.class));
+            verify(userService).getUserByEmailWithRoles(signInDto.email());
+            verify(refreshTokenService).getRefreshToken(user);
+            verify(refreshTokenService).getRefreshTokenCookie(refreshToken);
+            verify(jwtService).getJwsToken(any(), anyLong());
 
             assertNotNull(result);
             assertEquals(accessToken, result.accessToken());
@@ -171,7 +180,7 @@ public class AuthServiceTest {
 
             assertThrows(TokenValidationException.class, () -> authService.refreshTokens(refreshToken));
 
-            verify(refreshTokenService, times(1)).validateAndRotateToken(refreshToken);
+            verify(refreshTokenService).validateAndRotateToken(refreshToken);
             verifyNoMoreInteractions(jwtService, refreshTokenService);
         }
 
@@ -191,9 +200,9 @@ public class AuthServiceTest {
 
             TokenResponse result = authService.refreshTokens(refreshToken);
 
-            verify(refreshTokenService, times(1)).validateAndRotateToken(refreshToken);
-            verify(jwtService, times(1)).getJwsToken(Set.of(userRole.getName()), user.getId());
-            verify(refreshTokenService, times(1)).getRefreshTokenCookie(refreshToken);
+            verify(refreshTokenService).validateAndRotateToken(refreshToken);
+            verify(jwtService).getJwsToken(Set.of(userRole.getName()), user.getId());
+            verify(refreshTokenService).getRefreshTokenCookie(refreshToken);
 
             assertNotNull(result);
             assertEquals(accessToken, result.accessToken());
@@ -201,12 +210,28 @@ public class AuthServiceTest {
         }
     }
 
+
     @Test
     void logoutTest() {
         String refreshToken = "refreshToken";
 
         authService.logout(refreshToken);
 
-        verify(refreshTokenService, times(1)).deleteTokenByToken(refreshToken);
+        verify(refreshTokenService).deleteTokenByToken(refreshToken);
+    }
+
+
+    @Test
+    void verifyAccount() {
+        long code = 1123123L;
+        long userId = 1L;
+
+        when(verificationCodeService.verifyCode(anyLong())).thenReturn(userId);
+
+        authService.verifyAccount(code);
+
+        verify(verificationCodeService).verifyCode(code);
+        verify(userService).markUserAsVerified(userId);
+
     }
 }
