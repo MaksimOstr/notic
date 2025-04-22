@@ -1,10 +1,9 @@
 package com.notic.config.security;
 
-import com.notic.config.security.handler.CustomAccessDeniedHandler;
-import com.notic.config.security.filter.JwtFilter;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
 import com.notic.config.security.handler.OAuth2SuccessHandler;
 import com.notic.config.security.handler.Oauth2FailureHandler;
+import com.notic.config.security.service.CustomJwtAuthConverter;
 import com.notic.config.security.service.CustomOidcUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -18,8 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 
 @Configuration
@@ -32,6 +31,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
     @Bean
     DaoAuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -40,15 +40,23 @@ public class SecurityConfig {
         return authProvider;
     }
 
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            JwtFilter jwtFilter,
             DaoAuthenticationProvider daoAuthenticationProvider,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
             CustomOidcUserService customOidcUserService,
             OAuth2SuccessHandler oAuth2SuccessHandler,
-            Oauth2FailureHandler oauth2FailureHandler
+            Oauth2FailureHandler oauth2FailureHandler,
+            JwtDecoder jwtDecoder,
+            CustomJwtAuthConverter customJwtAuthConverter
     ) throws Exception {
         return http
                 .authenticationProvider(daoAuthenticationProvider)
@@ -65,14 +73,12 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oauth2FailureHandler)
                 )
-                .addFilterAfter(jwtFilter, LogoutFilter.class)
+                .oauth2ResourceServer(server -> server
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(jwtDecoder)
+                                .jwtAuthenticationConverter(customJwtAuthConverter)))
                 .exceptionHandling(handler -> handler
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
                 .build();
-    }
-
-    @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
     }
 }

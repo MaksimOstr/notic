@@ -1,9 +1,9 @@
 package com.notic.config.security.service;
 
 import com.notic.config.security.model.CustomOidcUser;
+import com.notic.dto.CreateUserDto;
 import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
-import com.notic.service.RoleService;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Set;
 
 
 @Service
@@ -22,7 +21,6 @@ import java.util.Set;
 public class CustomOidcUserService extends OidcUserService {
 
     private final UserService userService;
-    private final RoleService roleService;
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
@@ -31,18 +29,15 @@ public class CustomOidcUserService extends OidcUserService {
         String email = idToken.getEmail();
         String username = idToken.getClaimAsString("name");
 
-        User user = userService.getUserByEmailWithRoles(email)
-                .orElseGet(() -> {
-                    User newUser = new User(
-                            username,
-                            email,
-                            Set.of(roleService.getDefaultRole()),
-                            AuthProviderEnum.GOOGLE
-                    );
-                    return userService.saveUser(newUser);
-                });
+        CreateUserDto createUserDto = new CreateUserDto(
+                email,
+                username,
+                null
+        );
 
-        if(user.getAuthProvider() == AuthProviderEnum.LOCAL) {
+        User user = userService.createGoogleUser(createUserDto);
+
+        if(user.getAuthProvider() != AuthProviderEnum.GOOGLE) {
             OAuth2Error oauth2Error = new OAuth2Error("This account was created by another provider");
             throw new OAuth2AuthenticationException(oauth2Error, oauth2Error.toString());
         }

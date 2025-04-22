@@ -1,7 +1,7 @@
 package com.notic.controller;
 
+import com.notic.config.security.model.CustomJwtUser;
 import com.notic.dto.CreateNoteDto;
-import com.notic.dto.JwtAuthUserDto;
 import com.notic.dto.UpdateNoteDto;
 import com.notic.entity.Note;
 import com.notic.response.ApiErrorResponse;
@@ -58,7 +58,7 @@ public class NoteController {
     @PostMapping("/create")
     public ResponseEntity<Note> createNote(
             @Valid @RequestBody CreateNoteDto createNoteDto,
-            @AuthenticationPrincipal JwtAuthUserDto principal
+            @AuthenticationPrincipal CustomJwtUser principal
     ) {
         Note createdNote = noteService.createNote(createNoteDto, principal.getId());
 
@@ -68,7 +68,7 @@ public class NoteController {
 
     @GetMapping
     public ResponseEntity<Page<Note>> getNotes(
-            @AuthenticationPrincipal JwtAuthUserDto principal,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -97,7 +97,7 @@ public class NoteController {
     @GetMapping("/author/{id}")
     public ResponseEntity<Page<Note>> getFriendNotes(
             @PathVariable("id") Long friendId,
-            @AuthenticationPrincipal JwtAuthUserDto principal
+            @AuthenticationPrincipal CustomJwtUser principal
     ) {
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Note> friendPageOfNotes = noteService.getFriendPageOfNotes(principal.getId(), friendId, pageable);
@@ -131,7 +131,7 @@ public class NoteController {
     })
     @GetMapping("/{noteId}")
     public ResponseEntity<Note> getNoteById(
-            @AuthenticationPrincipal JwtAuthUserDto principal,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @PathVariable @NotNull Long noteId
     ) {
         Note note = noteService.getNoteByIdAndUserId(noteId, principal.getId());
@@ -165,7 +165,7 @@ public class NoteController {
     })
     @PatchMapping("/{noteId}")
     public ResponseEntity<Note> updateNote(
-            @AuthenticationPrincipal JwtAuthUserDto principal,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @PathVariable long noteId,
             @RequestBody@Valid UpdateNoteDto body
     ) {
@@ -176,7 +176,7 @@ public class NoteController {
 
     @DeleteMapping("/{noteId}")
     public ResponseEntity<?> deleteNoteById(
-            @AuthenticationPrincipal JwtAuthUserDto principal,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @PathVariable @NotNull Long noteId
     ) {
         noteService.deleteNoteById(noteId, principal.getId());

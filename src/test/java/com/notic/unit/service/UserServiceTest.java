@@ -6,7 +6,6 @@ import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.projection.GetUserAvatarProjection;
-import com.notic.projection.JwtAuthUserProjection;
 import com.notic.projection.UserCredentialsProjection;
 import com.notic.repository.UserRepository;
 import com.notic.service.RoleService;
@@ -294,24 +293,5 @@ public class UserServiceTest {
 
             verify(userRepository).updateUserAvatarById(userId, avatarUrl);
         }
-    }
-
-    @Test
-    void getUserForJwtAuth() {
-        long userId = 1L;
-        ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-        JwtAuthUserProjection projection = factory.createProjection(
-                JwtAuthUserProjection.class,
-                new Object[]{userId}
-        );
-
-        when(userRepository.findUserForJwtAuthById(anyLong())).thenReturn(Optional.of(projection));
-
-        Optional<JwtAuthUserProjection> result = userService.getUserForJwtAuth(userId);
-
-        verify(userRepository).findUserForJwtAuthById(userId);
-
-        assertTrue(result.isPresent());
-        assertEquals(projection, result.get());
     }
 }

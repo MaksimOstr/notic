@@ -2,7 +2,6 @@ package com.notic.unit.controller;
 
 import com.notic.advice.FriendshipControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
-import com.notic.config.security.filter.JwtFilter;
 import com.notic.controller.FriendshipController;
 import com.notic.dto.JwtAuthUserDto;
 import com.notic.exception.FriendshipException;
@@ -10,7 +9,6 @@ import com.notic.projection.FriendshipProjection;
 import com.notic.repository.FriendshipRepository;
 import com.notic.service.FriendshipService;
 import com.notic.service.UserService;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

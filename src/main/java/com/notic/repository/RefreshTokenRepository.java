@@ -10,8 +10,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    boolean existsByToken(String token);
-
 
     Optional<RefreshToken> findByUser(User user);
 

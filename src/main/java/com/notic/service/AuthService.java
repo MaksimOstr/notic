@@ -1,5 +1,6 @@
 package com.notic.service;
 
+import com.notic.config.security.model.CustomUserDetails;
 import com.notic.dto.CreateUserDto;
 import com.notic.dto.SignInDto;
 import com.notic.dto.TokenResponse;
@@ -11,13 +12,14 @@ import com.notic.entity.VerificationCode;
 import com.notic.event.EmailVerificationEvent;
 import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,6 +36,7 @@ public class AuthService {
     private final VerificationCodeService verificationCodeService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
+
     public UserDto signUp(CreateUserDto body) {
         User createdUser = userService.createUser(body);
         VerificationCode verificationCode = verificationCodeService.createVerificationCode(createdUser);
@@ -43,26 +46,25 @@ public class AuthService {
         return userMapper.toDto(createdUser);
    }
 
+   @Transactional
    public TokenResponse signIn(SignInDto body) {
         Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
-        authenticationManager.authenticate(authReq);
-        User user = userService.getUserByEmailWithRoles(body.email())
-                .orElseThrow(() -> new AuthenticationFlowException("Authentication failed"));
+        Authentication authentication = authenticationManager.authenticate(authReq);
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        User user = customUserDetails.getUser();
         String refreshToken = refreshTokenService.getRefreshToken(user);
-        Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(refreshToken);
         String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getId());
 
-        return new TokenResponse(accessToken, refreshTokenCookie);
+        return new TokenResponse(accessToken, refreshToken);
    }
 
    public TokenResponse refreshTokens(String refreshToken) {
         RefreshTokenValidationResultDto refreshTokenValidationResultDto = refreshTokenService.validateAndRotateToken(refreshToken);
         User user = refreshTokenValidationResultDto.refreshToken().getUser();
-        String rawToken = refreshTokenValidationResultDto.rawRefreshToken();
+        String rawRefreshToken = refreshTokenValidationResultDto.rawRefreshToken();
         String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getId());
-        Cookie refreshTokenCookie = refreshTokenService.getRefreshTokenCookie(rawToken);
 
-        return new TokenResponse(accessToken, refreshTokenCookie);
+        return new TokenResponse(accessToken, rawRefreshToken);
    }
 
    public void logout(String refreshToken) {

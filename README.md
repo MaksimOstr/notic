@@ -47,8 +47,8 @@ This is a backend app which was meant for notes service. Such features was imple
     **Jwt local auth:**
     ```
     JWT_SECRET
-    ISSUER
-    JWT_EXPIRE_IN
+    JWT_ISSUER
+    JWT_EXPIRE_TIME
     REFRESH_TOKEN_SECRET
     REFRESH_TOKEN_TTL
     DOMAIN

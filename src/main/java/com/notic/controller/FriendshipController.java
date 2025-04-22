@@ -1,6 +1,6 @@
 package com.notic.controller;
 
-import com.notic.dto.JwtAuthUserDto;
+import com.notic.config.security.model.CustomJwtUser;
 import com.notic.projection.FriendshipProjection;
 import com.notic.service.FriendshipService;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,12 +29,12 @@ public class FriendshipController {
     })
     @GetMapping
     public ResponseEntity<Page<FriendshipProjection>> getFriendshipsByUserId(
-            @AuthenticationPrincipal JwtAuthUserDto user,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<FriendshipProjection> friendshipsPage = friendshipService.getFriendships(user.getId(), pageable);
+        Page<FriendshipProjection> friendshipsPage = friendshipService.getFriendships(principal.getId(), pageable);
 
         return ResponseEntity.ok(friendshipsPage);
     }
@@ -53,9 +53,9 @@ public class FriendshipController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFriendship(
             @PathVariable Long id,
-            @AuthenticationPrincipal JwtAuthUserDto user
+            @AuthenticationPrincipal CustomJwtUser principal
     ) {
-        friendshipService.deleteFriendship(id, user.getId());
+        friendshipService.deleteFriendship(id, principal.getId());
 
         return ResponseEntity.ok().build();
     }

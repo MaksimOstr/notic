@@ -1,6 +1,6 @@
 package com.notic.controller;
 
-import com.notic.dto.JwtAuthUserDto;
+import com.notic.config.security.model.CustomJwtUser;
 import com.notic.dto.SendFriendshipRequestDto;
 import com.notic.projection.FriendshipRequestProjection;
 import com.notic.response.ApiErrorResponse;
@@ -35,14 +35,14 @@ public class FriendshipRequestController {
     })
     @GetMapping
     public ResponseEntity<Page<FriendshipRequestProjection>> getAllFriendshipRequests(
-            @AuthenticationPrincipal JwtAuthUserDto user,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
 
     ) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<FriendshipRequestProjection> requests = friendshipRequestService.getAllFriendshipRequests(user.getId(), pageable);
+        Page<FriendshipRequestProjection> requests = friendshipRequestService.getAllFriendshipRequests(principal.getId(), pageable);
         return ResponseEntity.ok(requests);
     }
 
@@ -65,10 +65,10 @@ public class FriendshipRequestController {
     })
     @PostMapping
     public ResponseEntity<?> sendFriendshipRequest(
-            @AuthenticationPrincipal JwtAuthUserDto user,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @RequestBody @Valid SendFriendshipRequestDto friendshipRequest
     ) {
-        friendshipRequestService.createRequest(user.getId(), friendshipRequest.receiverId());
+        friendshipRequestService.createRequest(principal.getId(), friendshipRequest.receiverId());
         return ResponseEntity.ok().build();
     }
 
@@ -92,9 +92,9 @@ public class FriendshipRequestController {
     @PostMapping("/{id}/accept")
     public ResponseEntity<?> acceptFriendshipRequest(
             @PathVariable("id") long requestId,
-            @AuthenticationPrincipal JwtAuthUserDto user
+            @AuthenticationPrincipal CustomJwtUser principal
     ) {
-        friendshipRequestService.acceptFriendshipRequest(requestId, user.getId());
+        friendshipRequestService.acceptFriendshipRequest(requestId, principal.getId());
         return ResponseEntity.ok().build();
     }
 
@@ -111,9 +111,9 @@ public class FriendshipRequestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFriendshipRequest(
             @PathVariable("id") long requestId,
-            @AuthenticationPrincipal JwtAuthUserDto user
+            @AuthenticationPrincipal CustomJwtUser principal
     ) {
-        friendshipRequestService.rejectFriendshipRequest(requestId, user.getId());
+        friendshipRequestService.rejectFriendshipRequest(requestId, principal.getId());
 
         return ResponseEntity.ok().build();
     }

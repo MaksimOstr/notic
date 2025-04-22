@@ -6,7 +6,6 @@ import com.notic.entity.User;
 import com.notic.exception.TokenValidationException;
 import com.notic.repository.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -55,17 +54,6 @@ public class RefreshTokenService {
         }
 
         return token;
-    }
-
-    public Cookie getRefreshTokenCookie(String refreshToken) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(refreshTokenTtl);
-        cookie.setPath("/");
-        cookie.setAttribute("SameSite", "Lax");
-
-        return cookie;
     }
 
     @Transactional(rollbackFor = {TokenValidationException.class})

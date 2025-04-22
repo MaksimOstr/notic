@@ -5,6 +5,7 @@ import com.notic.exception.InvalidLogoutRequestException;
 import com.notic.exception.TokenValidationException;
 import com.notic.response.ApiErrorResponse;
 import com.notic.service.AuthService;
+import com.notic.service.CookieService;
 import com.notic.utils.RefreshTokenUtils;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final CookieService cookieService;
 
 
     @ApiResponses({
@@ -80,7 +82,9 @@ public class AuthController {
             HttpServletResponse response
     ) {
             TokenResponse tokens = authService.signIn(body);
-            response.addCookie(tokens.refreshTokenCookie());
+            Cookie refreshTokenCookie = cookieService.createRefreshTokenCookie(tokens.refreshToken());
+
+            response.addCookie(refreshTokenCookie);
             return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
 
@@ -117,8 +121,9 @@ public class AuthController {
         }
 
         TokenResponse tokens = authService.refreshTokens(refreshToken);
+        Cookie refreshTokenCookie = cookieService.createRefreshTokenCookie(tokens.refreshToken());
 
-        response.addCookie(tokens.refreshTokenCookie());
+        response.addCookie(refreshTokenCookie);
         return ResponseEntity.status(HttpStatus.OK).body(tokens.accessToken());
     }
 
@@ -158,12 +163,9 @@ public class AuthController {
         }
 
         authService.logout(refreshToken);
-        Cookie refreshTokenCookie = new Cookie(RefreshTokenUtils.REFRESH_TOKEN_COOKIE_NAME, null);
-        refreshTokenCookie.setMaxAge(0);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setPath("/");
-        response.addCookie(refreshTokenCookie);
+        Cookie refreshTokenCookie = cookieService.deleteRefreshTokenCookie();
 
+        response.addCookie(refreshTokenCookie);
         return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully");
     }
 
