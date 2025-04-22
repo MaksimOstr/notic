@@ -6,7 +6,6 @@ import com.notic.entity.User;
 import com.notic.exception.TokenValidationException;
 import com.notic.repository.RefreshTokenRepository;
 import com.notic.service.RefreshTokenService;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,8 +49,8 @@ public class RefreshTokenServiceTest {
 
             String result = refreshTokenService.getRefreshToken(user);
 
-            verify(refreshTokenRepository, times(1)).findByUser(user);
-            verify(refreshTokenRepository, times(1)).save(refreshTokenArgumentCaptor.capture());
+            verify(refreshTokenRepository).findByUser(user);
+            verify(refreshTokenRepository).save(refreshTokenArgumentCaptor.capture());
 
             assertNotNull(result);
             assertEquals(refreshTokenArgumentCaptor.getValue().getUser(), user);
@@ -65,24 +64,11 @@ public class RefreshTokenServiceTest {
 
             String result = refreshTokenService.getRefreshToken(user);
 
-            verify(refreshTokenRepository, times(1)).findByUser(user);
+            verify(refreshTokenRepository).findByUser(user);
             verifyNoMoreInteractions(refreshTokenRepository);
 
             assertNotNull(result);
         }
-    }
-
-    @Test
-    void getRefreshTokenCookie() {
-        String refreshToken = "refreshToken";
-
-        Cookie result = refreshTokenService.getRefreshTokenCookie(refreshToken);
-
-        assertNotNull(result);
-        assertEquals(refreshToken, result.getValue());
-        assertEquals(3600, result.getMaxAge());
-        assertTrue(result.getPath().startsWith("/"));
-        assertTrue(result.isHttpOnly());
     }
 
     @Nested
@@ -95,7 +81,7 @@ public class RefreshTokenServiceTest {
             when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.empty());
 
             Exception exception = assertThrows(TokenValidationException.class, () -> refreshTokenService.validateAndRotateToken(refreshToken));
-            verify(refreshTokenRepository, times(1)).findByToken(anyString());
+            verify(refreshTokenRepository).findByToken(anyString());
             verifyNoMoreInteractions(refreshTokenRepository);
             assertEquals("Refresh token not found", exception.getMessage());
         }
@@ -108,8 +94,8 @@ public class RefreshTokenServiceTest {
 
             Exception exception = assertThrows(TokenValidationException.class, () -> refreshTokenService.validateAndRotateToken(refreshToken));
 
-            verify(refreshTokenRepository, times(1)).findByToken(anyString());
-            verify(refreshTokenRepository, times(1)).deleteById(anyLong());
+            verify(refreshTokenRepository).findByToken(anyString());
+            verify(refreshTokenRepository).deleteById(anyLong());
             assertEquals("Session is expired", exception.getMessage());
         }
 
@@ -121,7 +107,7 @@ public class RefreshTokenServiceTest {
 
             RefreshTokenValidationResultDto result = refreshTokenService.validateAndRotateToken(refreshToken);
 
-            verify(refreshTokenRepository, times(1)).findByToken(anyString());
+            verify(refreshTokenRepository).findByToken(anyString());
             verifyNoMoreInteractions(refreshTokenRepository);
 
             assertNotNull(result);

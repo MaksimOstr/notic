@@ -23,6 +23,7 @@ public class JwtConfig {
     @Value("${NIMBUS_ALG}")
     private String nimbusAlgorithm;
 
+
     @Bean
     JwtEncoder jwtEncoder() {
         byte[] secretBytes = Base64.getDecoder().decode(jwtSecret);

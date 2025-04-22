@@ -10,7 +10,6 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.entity.VerificationCode;
 import com.notic.event.EmailVerificationEvent;
-import com.notic.exception.AuthenticationFlowException;
 import com.notic.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

@@ -53,9 +53,9 @@ public class FriendshipServiceTest {
 
         friendshipService.createFriendship(userId1, userId2);
 
-        verify(friendshipRepository, times(1)).save(captor.capture());
-        verify(userService, times(1)).getUserById(userId1);
-        verify(userService, times(1)).getUserById(userId2);
+        verify(friendshipRepository).save(captor.capture());
+        verify(userService).getUserById(userId1);
+        verify(userService).getUserById(userId2);
 
         Friendship saved = captor.getValue();
 
@@ -73,7 +73,7 @@ public class FriendshipServiceTest {
 
         Page<FriendshipProjection> result = friendshipService.getFriendships(userId1, pageable);
 
-        verify(friendshipRepository, times(1)).findFriendshipsByUserId(userId1, pageable);
+        verify(friendshipRepository).findFriendshipsByUserId(userId1, pageable);
         assertEquals(resultPage, result);
     }
 
@@ -83,7 +83,7 @@ public class FriendshipServiceTest {
 
         boolean result = friendshipService.isFriendshipExistsByUserId(userId1, userId2);
 
-        verify(friendshipRepository, times(1)).exists(Mockito.<Specification<Friendship>>any());
+        verify(friendshipRepository).exists(Mockito.<Specification<Friendship>>any());
 
         assertTrue(result);
     }
@@ -94,6 +94,6 @@ public class FriendshipServiceTest {
 
         assertThrows(FriendshipException.class, () -> friendshipService.deleteFriendship(userId1, userId2));
 
-        verify(friendshipRepository, times(1)).removeFriendship(userId1, userId2);
+        verify(friendshipRepository).removeFriendship(userId1, userId2);
     }
 }

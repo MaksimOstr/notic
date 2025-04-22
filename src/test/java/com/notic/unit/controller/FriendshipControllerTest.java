@@ -2,8 +2,8 @@ package com.notic.unit.controller;
 
 import com.notic.advice.FriendshipControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
+import com.notic.config.security.model.CustomJwtUser;
 import com.notic.controller.FriendshipController;
-import com.notic.dto.JwtAuthUserDto;
 import com.notic.exception.FriendshipException;
 import com.notic.projection.FriendshipProjection;
 import com.notic.repository.FriendshipRepository;
@@ -41,9 +41,6 @@ public class FriendshipControllerTest {
     private FriendshipService friendshipService;
 
     @MockitoBean
-    private JwtFilter jwtFilter;
-
-    @MockitoBean
     private FriendshipRepository friendshipRepository;
 
     @MockitoBean
@@ -52,7 +49,7 @@ public class FriendshipControllerTest {
     private MockMvc mockMvc;
 
     private final long userId = 1L;
-    private final JwtAuthUserDto user = new JwtAuthUserDto(userId);
+    private final CustomJwtUser user = new CustomJwtUser(userId);
 
     @BeforeEach
     void setup() {
@@ -110,7 +107,7 @@ public class FriendshipControllerTest {
                     .andExpect(jsonPath("$.content[0].friendName").value(projection.friendName()))
                     .andExpect(jsonPath("$.content[0].friendAvatar").value(projection.friendAvatar()));
 
-            verify(friendshipService, times(1)).getFriendships(anyLong(), any(Pageable.class));
+            verify(friendshipService).getFriendships(anyLong(), any(Pageable.class));
         }
     }
 
@@ -124,7 +121,7 @@ public class FriendshipControllerTest {
             mockMvc.perform(delete("/friendships/{friendshipId}", friendshipId))
                     .andExpect(status().isOk());
 
-            verify(friendshipService, times(1)).deleteFriendship(friendshipId, userId);
+            verify(friendshipService).deleteFriendship(friendshipId, userId);
         }
 
 
@@ -141,7 +138,7 @@ public class FriendshipControllerTest {
                     .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()));
 
-            verify(friendshipService, times(1)).deleteFriendship(friendshipId, userId);
+            verify(friendshipService).deleteFriendship(friendshipId, userId);
         }
     }
 

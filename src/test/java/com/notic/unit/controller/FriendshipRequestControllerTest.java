@@ -3,8 +3,8 @@ package com.notic.unit.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notic.advice.FriendshipControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
+import com.notic.config.security.model.CustomJwtUser;
 import com.notic.controller.FriendshipRequestController;
-import com.notic.dto.JwtAuthUserDto;
 import com.notic.dto.SendFriendshipRequestDto;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.FriendshipException;
@@ -35,15 +35,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import java.time.Instant;
 import java.util.List;
 
+
 @WebMvcTest(controllers = FriendshipRequestControllerTest.class)
 public class FriendshipRequestControllerTest {
-
-    @MockitoBean
-    private JwtFilter jwtFilter;
 
     @MockitoBean
     private FriendshipRequestService friendshipRequestService;
@@ -63,7 +60,7 @@ public class FriendshipRequestControllerTest {
     private ObjectMapper objectMapper;
 
     private final long userId = 22L;
-    private final JwtAuthUserDto user = new JwtAuthUserDto(userId);
+    private final CustomJwtUser user = new CustomJwtUser(userId);
 
     @BeforeEach
     void setup() {
@@ -114,7 +111,7 @@ public class FriendshipRequestControllerTest {
                     .andExpect(jsonPath("$.content[0].senderUsername").value(projection.senderUsername()))
                     .andExpect(jsonPath("$.content[0].senderAvatar").value(projection.senderAvatar()));
 
-            verify(friendshipRequestService, times(1)).getAllFriendshipRequests(anyLong(), any(Pageable.class));
+            verify(friendshipRequestService).getAllFriendshipRequests(anyLong(), any(Pageable.class));
         }
 
     }
@@ -135,7 +132,7 @@ public class FriendshipRequestControllerTest {
                             .content(objectMapper.writeValueAsString(requestDto)))
                     .andExpect(status().isOk());
 
-            verify(friendshipRequestService, times(1)).createRequest(eq(user.getId()), eq(requestDto.receiverId()));
+            verify(friendshipRequestService).createRequest(eq(user.getId()), eq(requestDto.receiverId()));
         }
 
 
@@ -155,7 +152,7 @@ public class FriendshipRequestControllerTest {
                     .andExpect(jsonPath("$.code").value(HttpStatus.BAD_REQUEST.getReasonPhrase()))
                     .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.value()));
 
-            verify(friendshipRequestService, times(1)).createRequest(eq(requestDto.receiverId()),eq(requestDto.receiverId()));
+            verify(friendshipRequestService).createRequest(eq(requestDto.receiverId()),eq(requestDto.receiverId()));
         }
 
 
@@ -175,7 +172,7 @@ public class FriendshipRequestControllerTest {
                     .andExpect(jsonPath("$.code").value(HttpStatus.CONFLICT.getReasonPhrase()))
                     .andExpect(jsonPath("$.status").value(HttpStatus.CONFLICT.value()));
 
-            verify(friendshipRequestService, times(1)).createRequest(eq(requestDto.receiverId()),eq(requestDto.receiverId()));
+            verify(friendshipRequestService).createRequest(eq(requestDto.receiverId()),eq(requestDto.receiverId()));
         }
     }
 
@@ -188,7 +185,7 @@ public class FriendshipRequestControllerTest {
         mockMvc.perform(post("/friendship-requests/{id}/accept", requestId))
                 .andExpect(status().isOk());
 
-        verify(friendshipRequestService, times(1)).acceptFriendshipRequest(eq(requestId), eq(user.getId()));
+        verify(friendshipRequestService).acceptFriendshipRequest(eq(requestId), eq(user.getId()));
     }
 
 
@@ -201,6 +198,6 @@ public class FriendshipRequestControllerTest {
         mockMvc.perform(delete("/friendship-requests/{id}", requestId))
                 .andExpect(status().isOk());
 
-        verify(friendshipRequestService, times(1)).rejectFriendshipRequest(eq(requestId), eq(user.getId()));
+        verify(friendshipRequestService).rejectFriendshipRequest(eq(requestId), eq(user.getId()));
     }
 }

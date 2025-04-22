@@ -6,7 +6,6 @@ import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.projection.GetUserAvatarProjection;
-import com.notic.projection.UserCredentialsProjection;
 import com.notic.repository.UserRepository;
 import com.notic.service.RoleService;
 import com.notic.service.UserService;
@@ -38,7 +37,6 @@ public class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
-
 
 
     @Nested
@@ -80,8 +78,6 @@ public class UserServiceTest {
         void userAlreadyExists() {
             when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
-
-
             Exception result = assertThrows(EntityAlreadyExistsException.class, () -> userService.createUser(createUserDto));
             assertEquals("User already exists", result.getMessage());
 
@@ -95,34 +91,6 @@ public class UserServiceTest {
 
 
 
-        @Nested
-        class GetUserByEmail {
-            private final String email = "test@gmail.com";
-            private final String password = "12121212";
-            private final User user = new User("test", email, password, Set.of(new Role("ROLE_USER")));
-
-
-            @Test
-            void userDoesNotExist() {
-                when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-
-                Exception result = assertThrows(EntityDoesNotExistsException.class, () -> userService.getUserByEmail(email));
-
-                assertEquals("User not found", result.getMessage());
-            }
-
-            @Test
-            void userExists() {
-                when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-
-                User result = userService.getUserByEmail(email);
-
-
-                assertNotNull(result);
-                verify(userRepository).findByEmail(email);
-                assertEquals(user, result);
-            }
-        }
 
 
     @Nested
@@ -155,34 +123,6 @@ public class UserServiceTest {
         }
     }
 
-    @Nested
-    class getUserForAuth {
-        private final String email = "test@gmail.com";
-
-        @Test
-        void userDoesNotExist() {
-            when(userRepository.findUserForAuthByEmail(anyString())).thenReturn(Optional.empty());
-
-            Optional<UserCredentialsProjection> result = userService.getUserForAuthByEmail(email);
-
-            assertFalse(result.isPresent());
-
-            verify(userRepository).findUserForAuthByEmail(email);
-        }
-
-        @Test
-        void UserExists() {
-
-            UserCredentialsProjection projectionMock = mock(UserCredentialsProjection.class);
-            when(userRepository.findUserForAuthByEmail(anyString())).thenReturn(Optional.of(projectionMock));
-
-            Optional<UserCredentialsProjection> result = userService.getUserForAuthByEmail(email);
-
-            assertTrue(result.isPresent());
-
-            verify(userRepository).findUserForAuthByEmail(email);
-        }
-    }
 
     @Nested
     class MarkUserAsVerified {
@@ -239,20 +179,6 @@ public class UserServiceTest {
         verify(userRepository).existsById(userId);
 
         assertTrue(result);
-    }
-
-    @Test
-    void saveUser() {
-        User user = new User();
-
-        when(userRepository.save(user)).thenReturn(user);
-
-        User result = userService.saveUser(user);
-
-        verify(userRepository).save(user);
-
-        assertNotNull(result);
-        assertEquals(user, result);
     }
 
     @Test
