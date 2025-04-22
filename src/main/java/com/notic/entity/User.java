@@ -44,10 +44,10 @@ public class User {
     private AuthProviderEnum authProvider;
 
     @Column(nullable = false)
-    private Boolean accountNonLocked;
+    private Boolean accountNonLocked = true;
 
     @Column(nullable = false)
-    private Boolean enabled;
+    private Boolean enabled = true;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonManagedReference
@@ -76,16 +76,5 @@ public class User {
         this.enabled = true;
         this.roles = roles;
         this.authProvider = authProvider;
-    }
-
-    @PrePersist
-    void onCreate() {
-        if (accountNonLocked == null) {
-            accountNonLocked = true;
-        }
-
-        if(enabled == null) {
-            enabled = true;
-        }
     }
 }

@@ -33,7 +33,6 @@ public class FriendshipController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        System.out.println(user);
         Pageable pageable = PageRequest.of(page, size);
         Page<FriendshipProjection> friendshipsPage = friendshipService.getFriendships(user.getId(), pageable);
 

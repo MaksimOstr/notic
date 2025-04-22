@@ -46,7 +46,6 @@ public class SecurityConfig {
             JwtFilter jwtFilter,
             DaoAuthenticationProvider daoAuthenticationProvider,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
-            CustomAccessDeniedHandler customAccessDeniedHandler,
             CustomOidcUserService customOidcUserService,
             OAuth2SuccessHandler oAuth2SuccessHandler,
             Oauth2FailureHandler oauth2FailureHandler
@@ -68,7 +67,6 @@ public class SecurityConfig {
                 )
                 .addFilterAfter(jwtFilter, LogoutFilter.class)
                 .exceptionHandling(handler -> handler
-                        .accessDeniedHandler(customAccessDeniedHandler)
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
                 .build();
     }

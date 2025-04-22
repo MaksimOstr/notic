@@ -49,7 +49,6 @@ public class FriendshipRequestService {
         }
 
         FriendsPair pair = getFriendsPair(senderId, receiverId);
-        System.out.println(pair.sender().getUsername() + " " + pair.receiver().getUsername());
 
         FriendshipRequest friendshipRequest = new FriendshipRequest(pair.sender(), pair.receiver());
 
@@ -82,7 +81,6 @@ public class FriendshipRequestService {
                 receiverId
         );
         friendshipRequestRepository.deleteById(request.getId());
-        System.out.println(request.getSender().getUsername() + " " + request.getReceiver().getUsername());
 
         eventPublisher.publishEvent(new FriendshipRequestAcceptEvent(
                 Long.toString(request.getSender().getId()),
