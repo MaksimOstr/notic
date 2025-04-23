@@ -8,15 +8,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
 public class CustomUserDetails implements UserDetails, CredentialsContainer {
 
-    @Getter
-    private final User user;
     private final String email;
     private String password;
     private final boolean accountNonLocked;
@@ -26,7 +22,6 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
     private final long userId;
 
     public CustomUserDetails(User user) {
-        this.user = user;
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.accountNonLocked = user.getAccountNonLocked();

@@ -10,7 +10,10 @@ import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.entity.VerificationCode;
 import com.notic.event.EmailVerificationEvent;
+import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.mapper.UserMapper;
+import com.notic.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +37,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final VerificationCodeService verificationCodeService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final UserRepository userRepository;
 
 
     public UserDto signUp(CreateUserDto body) {
@@ -50,7 +54,8 @@ public class AuthService {
         Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
         Authentication authentication = authenticationManager.authenticate(authReq);
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = customUserDetails.getUser();
+        User user = userService.getUserById(customUserDetails.getUserId())
+                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
         String refreshToken = refreshTokenService.getRefreshToken(user);
         String accessToken = jwtTokenService.getJwsToken(mapRoles(user.getRoles()), user.getId());
 
