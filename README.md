@@ -51,7 +51,7 @@ This is a backend app which was meant for notes service. Such features was imple
     JWT_EXPIRE_TIME
     REFRESH_TOKEN_SECRET
     REFRESH_TOKEN_TTL
-    DOMAIN
+    NIMBUS_ALG
     ```
 
     **Email sender:**
