@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import static org.mockito.Mockito.*;
@@ -148,6 +149,7 @@ public class AuthServiceTest {
 
             when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authRes);
             when(refreshTokenService.getRefreshToken(any(User.class))).thenReturn(refreshToken);
+            when(userService.getUserById(anyLong())).thenReturn(Optional.of(user));
             when(jwtService.getJwsToken(any(), anyLong())).thenReturn(accessToken);
 
             TokenResponse result = authService.signIn(signInDto);
