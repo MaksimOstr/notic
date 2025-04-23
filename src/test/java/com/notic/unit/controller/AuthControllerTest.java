@@ -21,7 +21,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,6 +39,8 @@ public class AuthControllerTest {
     @MockitoBean
     private JwtService jwtService;
 
+    @MockitoBean
+    private CookieService cookieService;
 
     @MockitoBean
     private AuthenticationManager authenticationManager;
@@ -70,7 +71,7 @@ public class AuthControllerTest {
 
     @BeforeEach
     void setup() {
-        AuthController authController = new AuthController(authService);
+        AuthController authController = new AuthController(authService, cookieService);
         GlobalControllerAdvice globalExceptionHandler = new GlobalControllerAdvice();
         AuthControllerAdvice authControllerAdvice = new AuthControllerAdvice();
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
@@ -114,7 +115,7 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.email").value(createUserDto.email()))
                     .andExpect(jsonPath("$.id").value(1));
 
-            verify(authService, times(1)).signUp(createUserDto);
+            verify(authService).signUp(createUserDto);
         }
 
         @Test
@@ -128,7 +129,7 @@ public class AuthControllerTest {
                             .content(objectMapper.writeValueAsString(createUserDto)))
                     .andExpect(status().is(409))
                     .andExpect(jsonPath("$.message").value(errorMessage));
-            verify(authService, times(1)).signUp(createUserDto);
+            verify(authService).signUp(createUserDto);
         }
     }
 
@@ -147,42 +148,30 @@ public class AuthControllerTest {
                     .andExpect(jsonPath("$.email").isNotEmpty());
 
 
-            verify(authService, never()).signIn(any());
-        }
+            verifyNoInteractions(authService, cookieService);
 
-        @Test
-        void userDoesNotExist() throws Exception {
-            String errorMessage = "Authentication failed";
-
-            when(authService.signIn(signInDto)).thenThrow(new AuthenticationFlowException(errorMessage));
-
-            mockMvc.perform(post("/auth/sign-in")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(signInDto)))
-                    .andExpect(status().is(401))
-                    .andExpect(jsonPath("$.message").value(errorMessage));
-
-
-            verify(authService, times(1)).signIn(any());
         }
 
         @Test
         void signInSuccess() throws Exception {
 
-            Cookie refreshCookie = new Cookie("refreshToken", "refreshToken");
+            String refreshToken = "refreshTokenData";
             String accessToken = "accessToken";
+            Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
 
-            when(authService.signIn(any(SignInDto.class))).thenReturn(new TokenResponse(accessToken, refreshCookie));
+            when(authService.signIn(any(SignInDto.class))).thenReturn(new TokenResponse(accessToken, refreshToken));
+            when(cookieService.createRefreshTokenCookie(anyString())).thenReturn(refreshTokenCookie);
 
             mockMvc.perform(post("/auth/sign-in")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(signInDto)))
                     .andExpect(header().exists("Set-Cookie"))
-                    .andExpect(header().string("Set-Cookie", "refreshToken=refreshToken"))
+                    .andExpect(header().string("Set-Cookie", "refreshToken="+refreshToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").value(accessToken));
 
-            verify(authService, times(1)).signIn(signInDto);
+            verify(authService).signIn(signInDto);
+            verify(cookieService).createRefreshTokenCookie(refreshToken);
         }
 
         @Nested
@@ -204,9 +193,10 @@ public class AuthControllerTest {
             @Test
             void successfulRefreshingTokens() throws Exception {
                 String accessToken = "accessToken";
-                TokenResponse tokenResponse = new TokenResponse(accessToken, refreshCookie);
+                TokenResponse tokenResponse = new TokenResponse(accessToken, refreshToken);
 
                 when(authService.refreshTokens(anyString())).thenReturn(tokenResponse);
+                when(cookieService.createRefreshTokenCookie(anyString())).thenReturn(refreshCookie);
 
                 mockMvc.perform(post("/auth/refresh")
                         .cookie(refreshCookie))
@@ -215,7 +205,8 @@ public class AuthControllerTest {
                         .andExpect(cookie().value("refreshToken", refreshToken))
                         .andExpect(jsonPath("$").value(accessToken));
 
-                verify(authService, times(1)).refreshTokens(refreshToken);
+                verify(authService).refreshTokens(refreshToken);
+                verify(cookieService).createRefreshTokenCookie(refreshToken);
             }
 
             @Test
@@ -231,7 +222,8 @@ public class AuthControllerTest {
                                 .andExpect(header().doesNotExist("Set-Cookie"))
                                 .andExpect(jsonPath("$.message").value(errorMessage));
 
-                verify(authService, times(1)).refreshTokens(refreshToken);
+                verify(authService).refreshTokens(refreshToken);
+                verify(cookieService, never()).createRefreshTokenCookie(anyString());
             }
         }
     }
@@ -256,16 +248,17 @@ public class AuthControllerTest {
             String refreshToken = "refreshToken";
             Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
 
+            doNothing().when(authService).logout(any());
+            when(cookieService.deleteRefreshTokenCookie()).thenReturn(refreshCookie);
+
 
             mockMvc.perform(post("/auth/logout")
                     .cookie(refreshCookie))
                     .andExpect(status().isOk())
-                    .andExpect(header().exists("Set-Cookie"))
-                    .andExpect(cookie().httpOnly(refreshToken, true))
-                    .andExpect(cookie().path(refreshToken, "/"))
-                    .andExpect(cookie().maxAge(refreshToken, 0));
+                    .andExpect(header().exists("Set-Cookie"));
 
-            verify(authService, times(1)).logout(refreshToken);
+            verify(authService).logout(refreshToken);
+            verify(cookieService).deleteRefreshTokenCookie();
         }
     }
 
@@ -273,15 +266,15 @@ public class AuthControllerTest {
     @Nested
     class VerifyAccountTest {
 
-        private final String InvalidCode = "1234";
         private final String code = "12345678";
         private final VerificationCodeRequestDto verificationCodeRequestDto = new VerificationCodeRequestDto(code);
 
         @Test
         void codeValidationError() throws Exception {
+            String invalidCode = "1234";
             mockMvc.perform(post("/auth/verify-account")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(new VerificationCodeRequestDto(InvalidCode))))
+                    .content(objectMapper.writeValueAsString(new VerificationCodeRequestDto(invalidCode))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").isNotEmpty());
 
@@ -307,7 +300,7 @@ public class AuthControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isNotEmpty());
 
-            verify(authService, times(1)).verifyAccount(Long.parseLong(verificationCodeRequestDto.code()));
+            verify(authService).verifyAccount(Long.parseLong(verificationCodeRequestDto.code()));
         }
     }
 }

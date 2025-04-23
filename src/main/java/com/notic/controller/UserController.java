@@ -1,12 +1,12 @@
 package com.notic.controller;
 
+import com.notic.config.security.model.CustomJwtUser;
 import com.notic.dto.CustomPutObjectDto;
-import com.notic.dto.JwtAuthUserDto;
 import com.notic.projection.GetUserAvatarProjection;
 import com.notic.service.S3Service;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +24,12 @@ public class UserController {
     private final UserService userService;
     private final S3Service s3Service;
 
+    @Value("${AWS_AVATAR_BUCKET_NAME}")
+    private String avatarBucketName;
+
     @PostMapping("/upload-avatar")
     public ResponseEntity<String> uploadAvatar(
-            @AuthenticationPrincipal JwtAuthUserDto principal,
+            @AuthenticationPrincipal CustomJwtUser principal,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         long userId = principal.getId();
@@ -34,7 +37,7 @@ public class UserController {
 
         try (InputStream inputStream = file.getInputStream()) {
             CustomPutObjectDto dto = new CustomPutObjectDto(
-                    "noticavatar",
+                    avatarBucketName,
                     key,
                     inputStream,
                     file.getSize(),

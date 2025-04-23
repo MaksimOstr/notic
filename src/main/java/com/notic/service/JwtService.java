@@ -1,72 +1,48 @@
 package com.notic.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
-import java.security.Key;
+import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
 
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class JwtService {
-    @Value("${JWT_SECRET:123412121212121212}")
-    private String jwtSecret;
+    @Value("${JWT_EXPIRE_TIME}")
+    private long jwtExpireTime;
 
-    @Value("${ISSUER:some@gmail.com}")
-    private String issuer;
+    @Value("${JWT_ISSUER}")
+    private String jwtIssuer;
 
-    @Value("${JWT_EXPIRE_IN:600000}")
-    private long jwtExpirationTime;
+    @Value("${JWT_HEADER_ALG}")
+    private String jwtHeaderAlg;
 
-    @PostConstruct
-    private void validateSecret() {
-        if (jwtSecret == null || jwtSecret.length() < 32) {
-            throw new IllegalStateException("JWT_SECRET must be at least 32 characters");
-        }
+    private final JwtEncoder jwtEncoder;
+
+    public String getJwsToken(Collection<String> authorities, Long subjectId) {
+        return generateToken(subjectId.toString(), authorities);
     }
 
-    public String getJwsToken(Collection<String> authorities, long subjectId) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", authorities);
-        return generateJwtToken(claims, subjectId);
-    }
+    private String generateToken(String subject, Collection<String> authorities) {
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plusSeconds(jwtExpireTime);
+        JwsHeader jwsHeader = JwsHeader.with(() -> jwtHeaderAlg).build();
+        JwtClaimsSet claimsSet = JwtClaimsSet.builder()
+                .subject(subject)
+                .issuer(jwtIssuer)
+                .claim("roles", authorities)
+                .issuedAt(issuedAt)
+                .expiresAt(expiresAt)
+                .build();
 
-    private String generateJwtToken(Map<String, Object> claims, long subjectId) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(Long.toString(subjectId))
-                .setIssuer(issuer)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationTime * 1000))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
-    }
-
-    public String extractUserId(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    public ArrayList<String> extractAuthorities(String token) {
-        return getAllClaims(token).get("roles", ArrayList.class);
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
-        final Claims claims = getAllClaims(token);
-        return claimsResolvers.apply(claims);
-    }
-
-    private Claims getAllClaims(String token) {
-        return Jwts.parserBuilder().requireIssuer(issuer).setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
-    }
-
-    private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(this.jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claimsSet)).getTokenValue();
     }
 }

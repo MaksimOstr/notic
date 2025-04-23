@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice(assignableTypes = UserController.class)
-public class UserContollerAdvice {
+public class UserControllerAdvice {
 
     @ExceptionHandler(UploadFileException.class)
     public ResponseEntity<ApiErrorResponse> handleUploadFileException(UploadFileException e) {
