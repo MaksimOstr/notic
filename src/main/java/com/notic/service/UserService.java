@@ -5,7 +5,6 @@ import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
-import com.notic.projection.GetUserAvatarProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +28,6 @@ public class UserService {
         isUserExistsByEmail(body.email());
 
         User user = new User(
-                body.username(),
                 body.email(),
                 passwordEncoder.encode(body.password()),
                 Set.of(roleService.getDefaultRole())
@@ -42,7 +40,6 @@ public class UserService {
         Optional<User> optionalUser = getUserByEmailWithRoles(body.email());
         if(optionalUser.isEmpty()) {
             User user = new User(
-                    body.username(),
                     body.email(),
                     Set.of(roleService.getDefaultRole()),
                     AuthProviderEnum.GOOGLE
@@ -52,10 +49,6 @@ public class UserService {
         }
 
         return optionalUser.get();
-    }
-
-    public Optional<GetUserAvatarProjection> getUserAvatarById(long id) {
-        return userRepository.getUserAvatarUrlById(id);
     }
 
     public boolean isUserExistsById(long id) {
@@ -78,13 +71,6 @@ public class UserService {
 
     public void markUserAsVerified(long id) {
         int updated = userRepository.updateEnabledStatusById(id, true);
-        if(updated == 0) {
-            throw new EntityDoesNotExistsException("User not found");
-        }
-    }
-
-    public void updateUserAvatarById(long id, String avatarUrl) {
-        int updated = userRepository.updateUserAvatarById(id, avatarUrl);
         if(updated == 0) {
             throw new EntityDoesNotExistsException("User not found");
         }

@@ -31,7 +31,6 @@ public class CustomOidcUserService extends OidcUserService {
 
         CreateUserDto createUserDto = new CreateUserDto(
                 email,
-                username,
                 null
         );
 

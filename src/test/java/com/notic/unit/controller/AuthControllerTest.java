@@ -58,7 +58,7 @@ public class AuthControllerTest {
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @MockitoBean
-    private EmailVerificationService emailService;
+    private EmailService emailService;
 
     @MockitoBean
     private ApplicationEventPublisher applicationEventPublisher;

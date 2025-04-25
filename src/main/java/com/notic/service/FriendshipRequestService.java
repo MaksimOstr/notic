@@ -2,6 +2,7 @@ package com.notic.service;
 
 
 import com.notic.entity.FriendshipRequest;
+import com.notic.entity.Profile;
 import com.notic.entity.User;
 import com.notic.event.FriendshipRequestAcceptEvent;
 import com.notic.event.FriendshipRequestCreatedEvent;
@@ -49,14 +50,14 @@ public class FriendshipRequestService {
         }
 
         FriendsPair pair = getFriendsPair(senderId, receiverId);
-
         FriendshipRequest friendshipRequest = new FriendshipRequest(pair.sender(), pair.receiver());
+        Profile senderProfile = pair.sender().getProfile();
 
         friendshipRequestRepository.save(friendshipRequest);
         eventPublisher.publishEvent(new FriendshipRequestCreatedEvent(
                 Long.toString(receiverId),
-                pair.sender().getUsername(),
-                pair.sender().getAvatar()
+                senderProfile.getUsername(),
+                senderProfile.getAvatar()
         ));
     }
 
@@ -81,11 +82,13 @@ public class FriendshipRequestService {
                 receiverId
         );
         friendshipRequestRepository.deleteById(request.getId());
+        
+        Profile receiverProfile = request.getReceiver().getProfile();
 
         eventPublisher.publishEvent(new FriendshipRequestAcceptEvent(
                 Long.toString(request.getSender().getId()),
-                request.getReceiver().getUsername(),
-                request.getReceiver().getAvatar()
+                receiverProfile.getUsername(),
+                receiverProfile.getAvatar()
         ));
     }
 

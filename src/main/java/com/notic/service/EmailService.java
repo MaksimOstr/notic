@@ -12,13 +12,13 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EmailVerificationService {
+public class EmailService {
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.from}")
     String from;
 
-    public void sendSimpleEmail(String to, String subject, String text) {
+    public void send(String to, String subject, String text) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(from);

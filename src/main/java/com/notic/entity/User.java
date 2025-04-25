@@ -24,11 +24,8 @@ import java.util.Set;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
-
-    @Column(nullable = false)
-    private String username;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -38,8 +35,6 @@ public class User {
     @CreatedDate
     private Instant createdAt;
 
-    private String avatar;
-
     @Enumerated(EnumType.STRING)
     private AuthProviderEnum authProvider;
 
@@ -47,11 +42,14 @@ public class User {
     private Boolean accountNonLocked = true;
 
     @Column(nullable = false)
-    private Boolean enabled = false;
+    private Boolean enabled = true;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonManagedReference
     private List<Note> notes;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Profile profile;
 
     @ManyToMany
     @JoinTable(
@@ -61,8 +59,7 @@ public class User {
     )
     private Set<Role> roles;
 
-    public User(String username, String email, String password, Set<Role> roles) {
-        this.username = username;
+    public User(String email, String password, Set<Role> roles) {
         this.email = email;
         this.password = password;
         this.roles = roles;
@@ -70,8 +67,7 @@ public class User {
 
     }
 
-    public User(String username, String email, Set<Role> roles, AuthProviderEnum authProvider) {
-        this.username = username;
+    public User(String email, Set<Role> roles, AuthProviderEnum authProvider) {
         this.email = email;
         this.enabled = true;
         this.roles = roles;

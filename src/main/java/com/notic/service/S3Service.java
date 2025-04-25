@@ -21,7 +21,7 @@ public class S3Service {
 
     private final S3Client s3Client;
 
-    public String uploadUserAvatar(CustomPutObjectDto dto) {
+    public String upload(CustomPutObjectDto dto) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(dto.bucket())
                 .key(dto.key())
@@ -38,9 +38,9 @@ public class S3Service {
     }
 
     @Async
-    public void deleteUserAvatar(String avatarUrl) {
+    public void delete(String itemUrl) {
         try {
-            URI uri = new URI(avatarUrl);
+            URI uri = new URI(itemUrl);
             String host = uri.getHost();
             String bucket = host.split("\\.")[0];
             String key = uri.getPath().substring(1);

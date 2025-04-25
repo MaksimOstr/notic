@@ -1,16 +1,14 @@
 package com.notic.service;
 
 import com.notic.config.security.model.CustomUserDetails;
-import com.notic.dto.CreateUserDto;
-import com.notic.dto.SignInDto;
-import com.notic.dto.TokenResponse;
-import com.notic.dto.UserDto;
-import com.notic.dto.RefreshTokenValidationResultDto;
+import com.notic.dto.*;
+import com.notic.entity.Profile;
 import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.entity.VerificationCode;
 import com.notic.event.EmailVerificationEvent;
 import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.mapper.AuthMapper;
 import com.notic.mapper.UserMapper;
 import com.notic.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,12 +35,20 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final VerificationCodeService verificationCodeService;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final UserRepository userRepository;
+    private final ProfileService profileService;
+    private final AuthMapper authMapper;
 
 
-    public UserDto signUp(CreateUserDto body) {
-        User createdUser = userService.createUser(body);
+    public UserDto signUp(SignUpRequestDto dto) {
+        CreateUserDto createUserDto = authMapper.toCreateUserDto(dto);
+        User createdUser = userService.createUser(createUserDto);
         VerificationCode verificationCode = verificationCodeService.createVerificationCode(createdUser);
+        CreateProfileDto createProfileDto = new CreateProfileDto(
+                dto.username(),
+                null,
+                createdUser
+        );
+        Profile profile = profileService.createProfile(createProfileDto);
         applicationEventPublisher.publishEvent(new EmailVerificationEvent(
                 createdUser.getEmail(), verificationCode.getCode()
         ));

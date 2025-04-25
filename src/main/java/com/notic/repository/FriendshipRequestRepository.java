@@ -20,8 +20,8 @@ public interface FriendshipRequestRepository extends JpaRepository<FriendshipReq
     @Query("""
     SELECT new com.notic.projection.FriendshipRequestProjection(
         fr.id,
-        fr.sender.username,
-        fr.sender.avatar,
+        fr.sender.profile.username,
+        fr.sender.profile.avatar,
         fr.createdAt
         ) FROM FriendshipRequest fr WHERE fr.receiver.id = :receiverId
     """)

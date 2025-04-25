@@ -15,8 +15,8 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long>, J
     @Query("""
         SELECT new com.notic.projection.FriendshipProjection(
             CASE WHEN f.user1.id = :userId THEN f.user2.id ELSE f.user1.id END,
-            CASE WHEN f.user1.id = :userId THEN f.user2.username ELSE f.user1.username END,
-            CASE WHEN f.user1.id = :userId THEN f.user2.avatar ELSE f.user1.avatar END,
+            CASE WHEN f.user1.id = :userId THEN f.user2.profile.username ELSE f.user1.profile.username END,
+            CASE WHEN f.user1.id = :userId THEN f.user2.profile.avatar ELSE f.user1.profile.avatar END,
             f.friendshipDate
         )
         FROM Friendship f

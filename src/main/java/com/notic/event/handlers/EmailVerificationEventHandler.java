@@ -1,7 +1,7 @@
 package com.notic.event.handlers;
 
 import com.notic.event.EmailVerificationEvent;
-import com.notic.service.EmailVerificationService;
+import com.notic.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EmailVerificationEventHandler {
 
-    private final EmailVerificationService emailVerificationService;
+    private final EmailService emailService;
 
     @Async
     @EventListener
     public void handle(EmailVerificationEvent event) {
         log.info("Email verification event received");
-        emailVerificationService.sendSimpleEmail(
+        emailService.send(
                 event.email(),
                 "Email verification",
                 String.valueOf(event.code())

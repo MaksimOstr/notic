@@ -1,5 +1,5 @@
 package com.notic.projection;
 
-public interface GetUserAvatarProjection {
+public interface GetProfileAvatarProjection {
     String getAvatar();
 }
