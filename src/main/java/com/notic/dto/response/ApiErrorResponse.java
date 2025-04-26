@@ -1,4 +1,4 @@
-package com.notic.response;
+package com.notic.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

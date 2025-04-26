@@ -19,7 +19,8 @@ import java.time.Instant;
                 @NamedSubgraph(
                         name = "userRoles",
                         attributeNodes = {
-                                @NamedAttributeNode("roles")
+                                @NamedAttributeNode("roles"),
+                                @NamedAttributeNode("profile")
                         }
                 )
         }

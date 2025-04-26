@@ -5,6 +5,9 @@ import com.notic.advice.AuthControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
 import com.notic.controller.AuthController;
 import com.notic.dto.*;
+import com.notic.dto.request.SignInRequestDto;
+import com.notic.dto.request.VerificationCodeRequestDto;
+import com.notic.dto.response.TokenResponse;
 import com.notic.exception.*;
 import com.notic.mapper.UserMapper;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
@@ -136,7 +139,7 @@ public class AuthControllerTest {
     @Nested
     class SignInTest {
 
-        private final SignInDto signInDto = new SignInDto("test@gmail.com", "12121212");
+        private final SignInRequestDto signInDto = new SignInRequestDto("test@gmail.com", "12121212");
 
         @Test
         void shouldThrowErrorWithEmptyFields() throws Exception {
@@ -159,7 +162,7 @@ public class AuthControllerTest {
             String accessToken = "accessToken";
             Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
 
-            when(authService.signIn(any(SignInDto.class))).thenReturn(new TokenResponse(accessToken, refreshToken));
+            when(authService.signIn(any(SignInRequestDto.class))).thenReturn(new TokenResponse(accessToken, refreshToken));
             when(cookieService.createRefreshTokenCookie(anyString())).thenReturn(refreshTokenCookie);
 
             mockMvc.perform(post("/auth/sign-in")

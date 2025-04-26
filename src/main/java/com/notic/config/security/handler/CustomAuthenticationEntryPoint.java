@@ -1,7 +1,7 @@
 package com.notic.config.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;

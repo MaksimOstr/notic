@@ -2,6 +2,8 @@ package com.notic.unit.service;
 
 import com.notic.config.security.model.CustomUserDetails;
 import com.notic.dto.*;
+import com.notic.dto.request.SignInRequestDto;
+import com.notic.dto.response.TokenResponse;
 import com.notic.entity.RefreshToken;
 import com.notic.entity.Role;
 import com.notic.entity.User;
@@ -114,7 +116,7 @@ public class AuthServiceTest {
     @Nested
     class SignIn {
 
-        private final SignInDto signInDto = new SignInDto("test@gmail.com", "12121212");
+        private final SignInRequestDto signInDto = new SignInRequestDto("test@gmail.com", "12121212");
         private final Role role = new Role("ROLE_USER");
         private final Set<Role> roles = Set.of(role);
         private final User user = new User(

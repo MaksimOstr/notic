@@ -1,6 +1,9 @@
 package com.notic.service;
 
+import com.notic.dto.CreateProfileDto;
 import com.notic.dto.CreateUserDto;
+import com.notic.dto.UserWithProfileDto;
+import com.notic.entity.Profile;
 import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
@@ -21,19 +24,23 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileService profileService;
 
 
     @Transactional(rollbackFor = EntityAlreadyExistsException.class)
-    public User createUser(CreateUserDto body) {
-        isUserExistsByEmail(body.email());
+    public UserWithProfileDto createUser(CreateUserDto userDto, CreateProfileDto profileDto) {
+        isUserExistsByEmail(userDto.email());
 
         User user = new User(
-                body.email(),
-                passwordEncoder.encode(body.password()),
+                userDto.email(),
+                passwordEncoder.encode(userDto.password()),
                 Set.of(roleService.getDefaultRole())
         );;
 
-        return userRepository.save(user);
+        User createdUser = userRepository.save(user);
+        Profile createdProfile = profileService.createProfile(profileDto);
+
+        return new UserWithProfileDto(createdUser, createdProfile);
     }
 
     public User createGoogleUser(CreateUserDto body) {
@@ -53,6 +60,10 @@ public class UserService {
 
     public boolean isUserExistsById(long id) {
         return userRepository.existsById(id);
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public Optional<User> getUserById(long id) {

@@ -5,12 +5,11 @@ import com.notic.exception.AuthenticationFlowException;
 import com.notic.exception.InvalidLogoutRequestException;
 import com.notic.exception.TokenValidationException;
 import com.notic.exception.VerificationCodeException;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 
 @RestControllerAdvice(assignableTypes = AuthController.class)
 public class AuthControllerAdvice {

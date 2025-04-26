@@ -4,7 +4,7 @@ import com.notic.config.security.model.CustomJwtUser;
 import com.notic.dto.CreateNoteDto;
 import com.notic.dto.UpdateNoteDto;
 import com.notic.entity.Note;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
 import com.notic.service.NoteService;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;

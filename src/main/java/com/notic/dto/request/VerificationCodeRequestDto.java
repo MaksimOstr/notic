@@ -1,4 +1,4 @@
-package com.notic.dto;
+package com.notic.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

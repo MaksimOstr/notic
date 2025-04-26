@@ -25,7 +25,7 @@ public class VerificationCodeService {
 
     private final VerificationCodeRepository verificationCodeRepository;
 
-    public VerificationCode createVerificationCode(User user) {
+    public VerificationCode create(User user) {
         VerificationCode verificationCode = new VerificationCode(
                 user,
                 generateUniqueCode(),
@@ -36,7 +36,7 @@ public class VerificationCodeService {
     }
 
 
-    public long verifyCode(long code) {
+    public long validate(long code) {
         VerificationCode verificationCode = findByCode(code)
                 .orElseThrow(() -> new VerificationCodeException("Invalid verification code"));
 

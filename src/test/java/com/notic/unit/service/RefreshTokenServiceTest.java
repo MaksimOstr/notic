@@ -1,6 +1,5 @@
 package com.notic.unit.service;
 
-import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.RefreshToken;
 import com.notic.entity.User;
 import com.notic.exception.TokenValidationException;

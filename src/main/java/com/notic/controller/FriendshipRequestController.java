@@ -1,9 +1,9 @@
 package com.notic.controller;
 
 import com.notic.config.security.model.CustomJwtUser;
-import com.notic.dto.SendFriendshipRequestDto;
+import com.notic.dto.request.SendFriendshipRequestDto;
 import com.notic.projection.FriendshipRequestProjection;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
 import com.notic.service.FriendshipRequestService;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

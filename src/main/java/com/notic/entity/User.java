@@ -48,7 +48,7 @@ public class User {
     @JsonManagedReference
     private List<Note> notes;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, optional = false, orphanRemoval = true)
     private Profile profile;
 
     @ManyToMany

@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN FETCH u.roles WHERE u.email = :email")
     Optional<User> findByEmailWithRoles(String email);
 
+    Optional<User> findByEmail(String email);
+
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.enabled = :enabled WHERE u.id = :id")

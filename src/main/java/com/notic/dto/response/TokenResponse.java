@@ -1,4 +1,4 @@
-package com.notic.dto;
+package com.notic.dto.response;
 
 public record TokenResponse(
         String accessToken,

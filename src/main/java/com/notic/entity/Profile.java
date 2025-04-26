@@ -1,12 +1,11 @@
 package com.notic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.notic.dto.CreateProfileDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "profiles")
@@ -24,6 +23,7 @@ public class Profile {
     private String avatar;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 

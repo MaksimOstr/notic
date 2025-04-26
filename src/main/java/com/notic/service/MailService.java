@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EmailService {
+public class MailService {
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.from}")
