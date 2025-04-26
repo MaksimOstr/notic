@@ -1,7 +1,8 @@
 package com.notic.service;
 
+import com.notic.dto.CreateLocalUserDto;
 import com.notic.dto.CreateProfileDto;
-import com.notic.dto.CreateUserDto;
+import com.notic.dto.CreateProviderUserDto;
 import com.notic.dto.UserWithProfileDto;
 import com.notic.entity.Profile;
 import com.notic.entity.User;
@@ -28,31 +29,46 @@ public class UserService {
 
 
     @Transactional(rollbackFor = EntityAlreadyExistsException.class)
-    public UserWithProfileDto createUser(CreateUserDto userDto, CreateProfileDto profileDto) {
-        isUserExistsByEmail(userDto.email());
+    public UserWithProfileDto createUser(CreateLocalUserDto dto) {
+        isUserExistsByEmail(dto.email());
 
         User user = new User(
-                userDto.email(),
-                passwordEncoder.encode(userDto.password()),
+                dto.email(),
+                passwordEncoder.encode(dto.password()),
                 Set.of(roleService.getDefaultRole())
         );;
 
         User createdUser = userRepository.save(user);
+
+        CreateProfileDto profileDto = new CreateProfileDto(
+                dto.username(),
+                null,
+                createdUser
+        );
+
         Profile createdProfile = profileService.createProfile(profileDto);
 
         return new UserWithProfileDto(createdUser, createdProfile);
     }
 
-    public User createGoogleUser(CreateUserDto body) {
-        Optional<User> optionalUser = getUserByEmailWithRoles(body.email());
+    public User createProviderUser(CreateProviderUserDto dto) {
+        Optional<User> optionalUser = getUserByEmailWithRoles(dto.email());
         if(optionalUser.isEmpty()) {
             User user = new User(
-                    body.email(),
+                    dto.email(),
                     Set.of(roleService.getDefaultRole()),
                     AuthProviderEnum.GOOGLE
             );
+            User createdUser = userRepository.save(user);
+            CreateProfileDto profileDto = new CreateProfileDto(
+                    dto.username(),
+                    null,
+                    createdUser
+            );
 
-            return userRepository.save(user);
+            profileService.createProfile(profileDto);
+
+            return createdUser;
         }
 
         return optionalUser.get();

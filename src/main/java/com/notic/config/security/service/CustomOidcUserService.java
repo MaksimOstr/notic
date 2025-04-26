@@ -1,7 +1,7 @@
 package com.notic.config.security.service;
 
 import com.notic.config.security.model.CustomOidcUser;
-import com.notic.dto.CreateUserDto;
+import com.notic.dto.CreateProviderUserDto;
 import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
 import com.notic.service.UserService;
@@ -24,17 +24,17 @@ public class CustomOidcUserService extends OidcUserService {
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-
         OidcIdToken idToken = userRequest.getIdToken();
         String email = idToken.getEmail();
         String username = idToken.getClaimAsString("name");
-
-        CreateUserDto createUserDto = new CreateUserDto(
+        String avatarUrl = idToken.getPicture();
+        CreateProviderUserDto createProviderUserDto = new CreateProviderUserDto(
+                AuthProviderEnum.GOOGLE,
                 email,
-                null
+                username,
+                avatarUrl
         );
-
-        User user = userService.createGoogleUser(createUserDto);
+        User user = userService.createProviderUser(createProviderUserDto);
 
         if(user.getAuthProvider() != AuthProviderEnum.GOOGLE) {
             OAuth2Error oauth2Error = new OAuth2Error("This account was created by another provider");

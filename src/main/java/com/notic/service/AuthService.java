@@ -31,9 +31,8 @@ public class AuthService {
 
     @Transactional
     public SignUpResponseDto signUp(SignUpRequestDto dto) {
-        CreateUserDto createUserDto = authMapper.signUptoCreateUserDto(dto);
-        CreateProfileDto createProfileDto = authMapper.signUptoProfileDto(dto);
-        UserWithProfileDto userWithProfile = userService.createUser(createUserDto, createProfileDto);
+        CreateLocalUserDto createUserDto = authMapper.signUptoCreateUserDto(dto);
+        UserWithProfileDto userWithProfile = userService.createUser(createUserDto);
 
         User user = userWithProfile.user();
 
