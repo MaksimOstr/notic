@@ -36,6 +36,7 @@ public class Friendship {
     private User user2;
 
     @CreatedDate
+    @Column(name = "friendship_date", nullable = false)
     private Instant friendshipDate;
 
     public Friendship(User user1, User user2) {

@@ -32,9 +32,11 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(length = 100)
     private String password;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @Enumerated(EnumType.STRING)
@@ -55,7 +57,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(
-            name = "user_role",
+            name = "users_role",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )

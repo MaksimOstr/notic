@@ -37,6 +37,7 @@ public class Note {
     private NoteVisibilityEnum visibility;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public Note(String title, String content, User author, NoteVisibilityEnum visibility) {

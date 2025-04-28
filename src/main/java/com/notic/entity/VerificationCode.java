@@ -20,12 +20,12 @@ public class VerificationCode {
     private User user;
 
     @Column(nullable = false, length = 8, unique = true)
-    private long code;
+    private int code;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    public VerificationCode(User user, long code, Instant expiresAt) {
+    public VerificationCode(User user, int code, Instant expiresAt) {
         this.user = user;
         this.code = code;
         this.expiresAt = expiresAt;

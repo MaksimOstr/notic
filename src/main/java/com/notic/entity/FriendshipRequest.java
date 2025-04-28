@@ -35,6 +35,7 @@ public class FriendshipRequest {
     private User receiver;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public FriendshipRequest(User sender, User receiver) {

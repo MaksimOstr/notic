@@ -37,7 +37,7 @@ public class RefreshToken {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
     public RefreshToken(String token, User user, Instant expiresAt) {

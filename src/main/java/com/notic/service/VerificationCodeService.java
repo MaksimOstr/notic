@@ -57,9 +57,9 @@ public class VerificationCodeService {
     }
 
 
-    private long generateUniqueCode() {
+    private int generateUniqueCode() {
         for (int i = 0; i < 5; i++) {
-            long code = generate8DigitCode();
+            int code = generate8DigitCode();
             if (!verificationCodeRepository.existsByCode(code)) {
                 return code;
             }
@@ -67,8 +67,8 @@ public class VerificationCodeService {
         throw new EntityAlreadyExistsException("Failed to generate a unique verification code after 5 attempts");
     }
 
-    private long generate8DigitCode() {
-        return MIN_CODE + random.nextInt((CODE_RANGE));
+    private int generate8DigitCode() {
+        return Math.toIntExact(MIN_CODE + random.nextInt((CODE_RANGE)));
     }
 
     private Instant getExpiryDate() {
