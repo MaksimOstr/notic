@@ -7,7 +7,10 @@ import com.notic.exception.VerificationCodeException;
 import com.notic.repository.VerificationCodeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Optional;
@@ -35,7 +38,7 @@ public class VerificationCodeService {
         return verificationCodeRepository.save(verificationCode);
     }
 
-
+    @Transactional
     public long validate(long code) {
         VerificationCode verificationCode = findByCode(code)
                 .orElseThrow(() -> new VerificationCodeException("Invalid verification code"));
@@ -78,5 +81,12 @@ public class VerificationCodeService {
 
     private void deleteById(long id) {
         verificationCodeRepository.deleteById(id);
+    }
+
+    @Transactional
+    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    public void removeExpiredCodes() {
+        Instant now = Instant.now();
+        verificationCodeRepository.deleteAllByExpiresAtBefore(now);
     }
 }

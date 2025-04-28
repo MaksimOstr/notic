@@ -45,7 +45,7 @@ public class RefreshTokenService {
         }
     }
 
-    @Transactional(rollbackFor = {TokenValidationException.class})
+    @Transactional
     public RefreshToken validate(String refreshToken) {
         RefreshToken token = findTokenByToken(refreshToken)
                 .orElseThrow(() -> new TokenValidationException("Refresh token not found"));

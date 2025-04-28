@@ -18,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.notic.utils.UserUtils.mapUserRoles;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,6 @@ public class AuthService {
     public SignUpResponseDto signUp(SignUpRequestDto dto) {
         CreateLocalUserDto createUserDto = authMapper.signUptoCreateUserDto(dto);
         UserWithProfileDto userWithProfile = userService.createUser(createUserDto);
-
         User user = userWithProfile.user();
 
         applicationEventPublisher.publishEvent(new UserCreationEvent(
@@ -50,7 +51,8 @@ public class AuthService {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userService.getUserById(customUserDetails.getUserId())
                 .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
-        return tokenService.getTokenPair(user);
+
+        return tokenService.getTokenPair(user.getId(), mapUserRoles(user));
    }
 
    public TokenResponse refreshTokens(String refreshToken) {

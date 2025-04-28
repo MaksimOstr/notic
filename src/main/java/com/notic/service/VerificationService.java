@@ -19,6 +19,7 @@ public class VerificationService {
     public void createAndSendVerificationCode(String email) {
         User user = userService.getUserByEmail(email)
                 .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
+
         VerificationCode verificationCode = verificationCodeService.create(user);
         String subject = "Verification email code";
         mailService.send(

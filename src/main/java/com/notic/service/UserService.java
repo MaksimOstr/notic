@@ -11,6 +11,7 @@ import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +38,9 @@ public class UserService {
                 passwordEncoder.encode(dto.password()),
                 Set.of(roleService.getDefaultRole())
         );;
-        User createdUser = userRepository.save(user);
+
+        User createdUser = saveUser(user);
+
         Profile createdProfile = createUserProfile(createdUser, dto.username(), null);
 
         return new UserWithProfileDto(createdUser, createdProfile);
@@ -52,7 +55,7 @@ public class UserService {
                             Set.of(roleService.getDefaultRole()),
                             AuthProviderEnum.GOOGLE
                     );
-                    User user = userRepository.save(newUser);
+                    User user = saveUser(newUser);
 
                     createUserProfile(user, dto.username(), dto.avatar());
                     return user;
@@ -85,6 +88,14 @@ public class UserService {
     private void isUserExistsByEmail(String email) {
         if(userRepository.existsByEmail(email)) {
             throw new EntityAlreadyExistsException("User already exists");
+        }
+    }
+
+    private User saveUser(User user) {
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            throw new EntityAlreadyExistsException("User with such email already exists: " + user.getEmail());
         }
     }
 
