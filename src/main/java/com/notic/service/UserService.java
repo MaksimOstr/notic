@@ -28,7 +28,7 @@ public class UserService {
     private final ProfileService profileService;
 
 
-    @Transactional(rollbackFor = EntityAlreadyExistsException.class)
+    @Transactional
     public UserWithProfileDto createUser(CreateLocalUserDto dto) {
         isUserExistsByEmail(dto.email());
 
@@ -37,45 +37,37 @@ public class UserService {
                 passwordEncoder.encode(dto.password()),
                 Set.of(roleService.getDefaultRole())
         );;
-
         User createdUser = userRepository.save(user);
-
-        CreateProfileDto profileDto = new CreateProfileDto(
-                dto.username(),
-                null,
-                createdUser
-        );
-
-        Profile createdProfile = profileService.createProfile(profileDto);
+        Profile createdProfile = createUserProfile(createdUser, dto.username(), null);
 
         return new UserWithProfileDto(createdUser, createdProfile);
     }
 
+    @Transactional
     public User createProviderUser(CreateProviderUserDto dto) {
-        Optional<User> optionalUser = getUserByEmailWithRoles(dto.email());
-        if(optionalUser.isEmpty()) {
-            User user = new User(
-                    dto.email(),
-                    Set.of(roleService.getDefaultRole()),
-                    AuthProviderEnum.GOOGLE
-            );
-            User createdUser = userRepository.save(user);
-            CreateProfileDto profileDto = new CreateProfileDto(
-                    dto.username(),
-                    null,
-                    createdUser
-            );
+        return userRepository.findByEmail(dto.email())
+                .orElseGet(() -> {
+                    User newUser = new User(
+                            dto.email(),
+                            Set.of(roleService.getDefaultRole()),
+                            AuthProviderEnum.GOOGLE
+                    );
+                    User user = userRepository.save(newUser);
 
-            profileService.createProfile(profileDto);
-
-            return createdUser;
-        }
-
-        return optionalUser.get();
+                    createUserProfile(user, dto.username(), dto.avatar());
+                    return user;
+                });
     }
 
     public boolean isUserExistsById(long id) {
         return userRepository.existsById(id);
+    }
+
+    public void markUserAsVerified(long id) {
+        int updated = userRepository.updateEnabledStatusById(id, true);
+        if(updated == 0) {
+            throw new EntityDoesNotExistsException("User not found");
+        }
     }
 
     public Optional<User> getUserByEmail(String email) {
@@ -96,10 +88,9 @@ public class UserService {
         }
     }
 
-    public void markUserAsVerified(long id) {
-        int updated = userRepository.updateEnabledStatusById(id, true);
-        if(updated == 0) {
-            throw new EntityDoesNotExistsException("User not found");
-        }
+    private Profile createUserProfile(User user, String username, String avatar) {
+        return profileService.createProfile(
+                new CreateProfileDto(username, avatar, user)
+        );
     }
 }

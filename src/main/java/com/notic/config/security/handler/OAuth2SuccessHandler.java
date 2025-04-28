@@ -2,11 +2,13 @@ package com.notic.config.security.handler;
 
 import com.notic.config.security.JwtConfig;
 import com.notic.config.security.model.CustomOidcUser;
+import com.notic.dto.response.TokenResponse;
 import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.service.CookieService;
 import com.notic.service.JwtService;
 import com.notic.service.RefreshTokenService;
+import com.notic.service.TokenService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,8 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
+    private final TokenService tokenService;
     private final CookieService cookieService;
 
     @Override
@@ -34,14 +35,12 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         User user = oidcUser.getUser();
 
-        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
-        String accessToken = jwtService.getJwsToken(roles, user.getId());
-        String refreshToken = refreshTokenService.getRefreshToken(user);
-        Cookie refreshTokenCookie = cookieService.createRefreshTokenCookie(refreshToken);
+        TokenResponse tokenResponse = tokenService.getTokenPair(user);
+        Cookie refreshTokenCookie = cookieService.createRefreshTokenCookie(tokenResponse.refreshToken());
 
         response.addCookie(refreshTokenCookie);
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json");
-        response.getWriter().write(accessToken);
+        response.getWriter().write(tokenResponse.accessToken());
     }
 }

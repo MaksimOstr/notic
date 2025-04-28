@@ -1,7 +1,7 @@
 package com.notic.service;
 
-import com.notic.dto.CreateNoteDto;
-import com.notic.dto.UpdateNoteDto;
+import com.notic.dto.request.CreateNoteDto;
+import com.notic.dto.request.UpdateNoteDto;
 import com.notic.entity.Note;
 import com.notic.entity.User;
 import com.notic.enums.NoteVisibilityEnum;
@@ -41,7 +41,7 @@ public class NoteService {
     }
 
 
-    public Page<Note> getPageOfNotes(long userId, Pageable pageable) {
+    public Page<Note> getPersonalNotes(long userId, Pageable pageable) {
         List<String> visibility = List.of(
                 NoteVisibilityEnum.PUBLIC.name(),
                 NoteVisibilityEnum.PROTECTED.name(),
@@ -52,7 +52,6 @@ public class NoteService {
 
 
     public Page<Note> getFriendPageOfNotes(long userId, long friendId, Pageable pageable) {
-
         boolean isUser = userService.isUserExistsById(friendId);
 
         if(!isUser) {

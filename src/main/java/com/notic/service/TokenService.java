@@ -29,7 +29,7 @@ public class TokenService {
 
     @Transactional
     public TokenResponse getTokenPair(User user) {
-        String refreshToken = refreshTokenService.getRefreshToken(user);
+        String refreshToken = refreshTokenService.create(user);
         return new TokenResponse(getAccessToken(user), refreshToken);
     }
 

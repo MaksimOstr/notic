@@ -1,8 +1,8 @@
 package com.notic.controller;
 
 import com.notic.config.security.model.CustomJwtUser;
-import com.notic.dto.CreateNoteDto;
-import com.notic.dto.UpdateNoteDto;
+import com.notic.dto.request.CreateNoteDto;
+import com.notic.dto.request.UpdateNoteDto;
 import com.notic.entity.Note;
 import com.notic.dto.response.ApiErrorResponse;
 import com.notic.service.NoteService;
@@ -74,7 +74,7 @@ public class NoteController {
     ) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Note> pageOfNotes = noteService.getPageOfNotes(principal.getId(), pageable);
+        Page<Note> pageOfNotes = noteService.getPersonalNotes(principal.getId(), pageable);
 
         return ResponseEntity.ok(pageOfNotes);
     }

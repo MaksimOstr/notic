@@ -32,7 +32,7 @@ public class VerificationCodeService {
                 getExpiryDate()
         );
 
-            return verificationCodeRepository.save(verificationCode);
+        return verificationCodeRepository.save(verificationCode);
     }
 
 

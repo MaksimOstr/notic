@@ -35,7 +35,7 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public String getRefreshToken(User user) {
+    public String create(User user) {
         Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByUser(user);
 
         if (optionalRefreshToken.isPresent()) {
