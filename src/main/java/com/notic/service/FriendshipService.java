@@ -28,7 +28,6 @@ public class FriendshipService {
         try {
             User user1 = entityManager.getReference(User.class, userId1);
             User user2 = entityManager.getReference(User.class, userId2);
-
             Friendship friendship = new Friendship(user1, user2);
 
             friendshipRepository.save(friendship);

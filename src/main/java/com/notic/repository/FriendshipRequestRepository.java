@@ -2,7 +2,6 @@ package com.notic.repository;
 
 import com.notic.entity.FriendshipRequest;
 import com.notic.projection.FriendshipRequestProjection;
-import org.hibernate.annotations.Fetch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,6 +31,15 @@ public interface FriendshipRequestRepository extends JpaRepository<FriendshipReq
     """)
     Page<FriendshipRequestProjection> getAllFriendshipRequests(@Param("receiverId") long receiverId, Pageable pageable);
 
-    @Query("SELECT fr FROM FriendshipRequest fr JOIN FETCH fr.sender JOIN FETCH fr.receiver WHERE fr.id = :id")
-    Optional<FriendshipRequest> findByRequestId(long id);
+    @Query("""
+    SELECT 
+        fr.id as id,
+        fr.sender.id as senderId,
+        fr.receiver.id as receiverId,
+        fr.receiver.profile.avatar as receiverAvatar,
+        fr.receiver.profile.username as receiverUsername
+    FROM FriendshipRequest fr
+    WHERE fr.id = :id
+""")
+    <T> Optional<T> findById(long id, Class<T> projection);
 }
