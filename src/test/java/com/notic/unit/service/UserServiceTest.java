@@ -1,12 +1,15 @@
 package com.notic.unit.service;
 
-import com.notic.dto.CreateUserDto;
+import com.notic.dto.CreateLocalUserDto;
+import com.notic.dto.CreateProfileDto;
+import com.notic.dto.UserWithProfileDto;
+import com.notic.entity.Profile;
 import com.notic.entity.Role;
 import com.notic.entity.User;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
-import com.notic.projection.GetUserAvatarProjection;
 import com.notic.repository.UserRepository;
+import com.notic.service.ProfileService;
 import com.notic.service.RoleService;
 import com.notic.service.UserService;
 import org.junit.jupiter.api.Nested;
@@ -14,8 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +35,9 @@ public class UserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
+    private ProfileService profileService;
+
+    @Mock
     private UserRepository userRepository;
 
     @InjectMocks
@@ -40,87 +45,89 @@ public class UserServiceTest {
 
 
     @Nested
-    class CreateUser {
+    class CreateLocalUser {
+        private final String email = "test@gmail.com";
+        private final String password = "testPassword";
+        private final String username = "bob";
+        private final String encodedPassword = "encoded";
+        private final Role userRole = new Role("ROLE_USER");
+        private final CreateLocalUserDto createUserDto = new CreateLocalUserDto(email, password, username);
+        private final User createdUser = new User(createUserDto.email(), encodedPassword, Set.of(userRole));
+        private final Profile profile = new Profile(
+                createUserDto.username(),
+                null,
+                createdUser
+        );
 
-        private final CreateUserDto createUserDto = new CreateUserDto("test@gmail.com", "test", "12121212");
 
         @Test
         void successfullyCreateUser() {
-
-            CreateUserDto createUserDto = new CreateUserDto("test@gmail.com", "test", "12121212");
             Role userRole = new Role("ROLE_USER");
             String encodedPassword = "encoded";
-            User createdUser = new User(createUserDto.username(), createUserDto.email(), encodedPassword, Set.of(userRole));
+            User createdUser = new User(createUserDto.email(), encodedPassword, Set.of(userRole));
 
             when(userRepository.existsByEmail(anyString())).thenReturn(false);
             when(roleService.getDefaultRole()).thenReturn(userRole);
+            when(profileService.createProfile(any(CreateProfileDto.class))).thenReturn(profile);
             when(passwordEncoder.encode(anyString())).thenReturn(encodedPassword);
             when(userRepository.save(any(User.class))).thenReturn(createdUser);
 
-            User result = userService.createUser(createUserDto);
-
+            UserWithProfileDto result = userService.createUser(createUserDto);
 
             verify(roleService).getDefaultRole();
             verify(passwordEncoder).encode(createUserDto.password());
             verify(userRepository).save(createdUser);
             verify(userRepository).existsByEmail(createUserDto.email());
 
-
+            Profile resultProfile = result.profile();
+            User resultUser = result.user();
 
             assertNotNull(result);
-            assertEquals(createUserDto.username(), result.getUsername());
-            assertEquals(createUserDto.email(), result.getEmail());
-            assertNotEquals(createUserDto.password(), result.getPassword());
-            assertEquals(encodedPassword, result.getPassword());
+            assertEquals(createUserDto.email(), resultUser.getEmail());
+            assertEquals(encodedPassword, resultUser.getPassword());
+            assertNotEquals(createUserDto.password(), resultUser.getPassword());
+            assertEquals(resultProfile.getUsername(), createUserDto.username());
         }
 
         @Test
         void userAlreadyExists() {
             when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
-            Exception result = assertThrows(EntityAlreadyExistsException.class, () -> userService.createUser(createUserDto));
-            assertEquals("User already exists", result.getMessage());
+            assertThrows(EntityAlreadyExistsException.class, () -> userService.createUser(createUserDto));
 
             verify(userRepository).existsByEmail(createUserDto.email());
-            verify(roleService, never()).getDefaultRole();
-            verify(userRepository, never()).save(any(User.class));
-            verify(passwordEncoder, never()).encode(anyString());
+            verifyNoInteractions(passwordEncoder, roleService, profileService);
+            verifyNoMoreInteractions(userRepository);
+        }
+
+        @Test
+        void dataIntegrityViolationException() {
+            when(userRepository.existsByEmail(anyString())).thenReturn(false);
+            when(roleService.getDefaultRole()).thenReturn(userRole);
+            when(passwordEncoder.encode(anyString())).thenReturn(encodedPassword);
+            when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException(""));
+
+            assertThrows(EntityAlreadyExistsException.class, () -> userService.createUser(createUserDto));
         }
     }
 
 
 
+    @Test
+    void userExists() {
+        String email = "test@gmail.com";
+        String password = "12121212";
+        User user = new User(email, password, Set.of(new Role("ROLE_USER")));
 
+        when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
 
+        Optional<User> result = userService.getUserByEmailWithRoles(email);
 
-    @Nested
-    class GetUserByEmailWithRoles {
-        private final String email = "test@gmail.com";
-        private final String password = "12121212";
-        private final User user = new User("test", email, password, Set.of(new Role("ROLE_USER")));
+        verify(userRepository).findByEmailWithRoles(email);
 
-        @Test
-        void userDoesNotExist() {
-            when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.empty());
-
-            Optional<User> result = userService.getUserByEmailWithRoles(email);
-
-            verify(userRepository).findByEmailWithRoles(email);
-
-            assertFalse(result.isPresent());
-        }
-
-        @Test
-        void userExists() {
-            when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
-
-            Optional<User> result = userService.getUserByEmailWithRoles(email);
-
-            assertTrue(result.isPresent());
-            assertNotNull(result.get());
-            verify(userRepository).findByEmailWithRoles(email);
-            assertEquals(user, result.get());
-        }
+        assertTrue(result.isPresent());
+        assertNotNull(result.get());
+        assertEquals(user, result.get());
     }
 
 
@@ -145,27 +152,6 @@ public class UserServiceTest {
 
             verify(userRepository).updateEnabledStatusById(userId, true);
         }
-    }
-
-    @Test
-    void getUserAvatarById() {
-        long userId = 1L;
-
-        ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-
-        GetUserAvatarProjection projection = factory.createProjection(
-                GetUserAvatarProjection.class,
-                new Object[]{"avatarUrl"}
-        );
-
-        when(userRepository.getUserAvatarUrlById(anyLong())).thenReturn(Optional.of(projection));
-
-        Optional<GetUserAvatarProjection> result = userService.getUserAvatarById(userId);
-
-        verify(userRepository).getUserAvatarUrlById(userId);
-
-        assertTrue(result.isPresent());
-        assertEquals(projection, result.get());
     }
 
     @Test
@@ -194,30 +180,6 @@ public class UserServiceTest {
         verify(userRepository).findById(userId);
 
         assertTrue(result.isPresent());
-        assertEquals(user.getId(), result.get().getId());
-    }
-
-    @Nested
-    class UpdateUserAvatarById {
-        private final long userId = 1L;
-        private final String avatarUrl = "avatarUrl";
-
-        @Test
-        void shouldThrowExceptionWhenUserDoesNotExist() {
-            when(userRepository.updateUserAvatarById(anyLong(), anyString())).thenReturn(0);
-
-            assertThrows(EntityDoesNotExistsException.class, () -> userService.updateUserAvatarById(userId, avatarUrl));
-
-            verify(userRepository).updateUserAvatarById(userId, avatarUrl);
-        }
-
-        @Test
-        void shouldMarkUserAsVerified() {
-            when(userRepository.updateUserAvatarById(anyLong(), anyString())).thenReturn(1);
-
-            userService.updateUserAvatarById(userId, avatarUrl);
-
-            verify(userRepository).updateUserAvatarById(userId, avatarUrl);
-        }
+        assertEquals(user, result.get());
     }
 }

@@ -1,6 +1,5 @@
 package com.notic.service;
 
-
 import com.notic.entity.FriendshipRequest;
 import com.notic.entity.Profile;
 import com.notic.entity.User;
@@ -32,6 +31,8 @@ public class FriendshipRequestService {
     private final ApplicationEventPublisher eventPublisher;
     private final EntityManager entityManager;
 
+    static final String FRIENDSHIP_REQUEST_NOT_FOUND  = "Friendship request not found";
+    static final String FRIENDSHIP_REQUEST_ALREADY_EXISTS = "Friendship request already exists";
 
     private record FriendshipRequestPair(User sender, User receiver) {}
 
@@ -49,7 +50,7 @@ public class FriendshipRequestService {
             friendshipRequestRepository.save(friendshipRequest);
             publishRequestCreatedEvent(receiverId, senderProfile);
         } catch (DataIntegrityViolationException e) {
-            throw new FriendshipException("Friendship request already exists");
+            throw new FriendshipException(FRIENDSHIP_REQUEST_ALREADY_EXISTS);
         }
     }
 
@@ -63,10 +64,10 @@ public class FriendshipRequestService {
     @Transactional
     public void acceptFriendshipRequest(long requestId, long receiverId) {
         FriendshipAcceptRequestProjection request = friendshipRequestRepository.findById(requestId, FriendshipAcceptRequestProjection.class)
-                .orElseThrow(() -> new EntityDoesNotExistsException("Friendship request not found"));
+                .orElseThrow(() -> new EntityDoesNotExistsException(FRIENDSHIP_REQUEST_NOT_FOUND));
 
         if(request.getReceiverId() != receiverId) {
-            throw new FriendshipException("Friendship accept error");
+            throw new FriendshipException("Friendship request accept error");
         }
 
         friendshipService.createFriendship(
@@ -84,19 +85,19 @@ public class FriendshipRequestService {
         int delete = friendshipRequestRepository.rejectFriendshipRequest(requestId, receiverId);
 
         if(delete == 0) {
-            throw new FriendshipException("Friendship error");
+            throw new FriendshipException(FRIENDSHIP_REQUEST_NOT_FOUND);
         }
     }
 
 
     private FriendshipRequestPair getSenderAndReceiver(long senderId, long receiverId) {
         User sender = userService.getUserById(senderId)
-                .orElseThrow(() -> new EntityDoesNotExistsException("Sender not found"));
+                .orElseThrow(() -> new EntityDoesNotExistsException("Friendship request sender not found"));
 
         boolean receiver = userService.isUserExistsById(receiverId);
 
         if(!receiver) {
-            throw new EntityDoesNotExistsException("Receiver not found");
+            throw new EntityDoesNotExistsException("Friendship request receiver not found");
         }
 
         User receiverUser = entityManager.getReference(User.class, receiverId);
@@ -107,7 +108,7 @@ public class FriendshipRequestService {
     private void ensureNoExistingRequestOrFriendship(long senderId, long receiverId) {
         boolean existsRequest = friendshipRequestRepository.exists(existsFriendshipByUserId(senderId, receiverId));
         if(existsRequest) {
-            throw new EntityAlreadyExistsException("Friendship request already exists");
+            throw new EntityAlreadyExistsException(FRIENDSHIP_REQUEST_ALREADY_EXISTS);
         }
         boolean existsFriendship = friendshipService.isFriendshipExistsByUserId(senderId, receiverId);
         if(existsFriendship) {

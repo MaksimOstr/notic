@@ -32,4 +32,10 @@ public class Profile {
         this.avatar = dto.avatar();
         this.user = dto.user();
     }
+
+    public Profile(String username, String avatar, User user) {
+        this.username = username;
+        this.avatar = avatar;
+        this.user = user;
+    }
 }

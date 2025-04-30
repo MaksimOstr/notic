@@ -28,6 +28,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ProfileService profileService;
 
+    private final static String USER_ALREADY_EXISTS = "User already exists with email:";
+    private final static String USER_NOT_FOUND = "User not found";
+
 
     @Transactional
     public UserWithProfileDto createUser(CreateLocalUserDto dto) {
@@ -69,7 +72,7 @@ public class UserService {
     public void markUserAsVerified(long id) {
         int updated = userRepository.updateEnabledStatusById(id, true);
         if(updated == 0) {
-            throw new EntityDoesNotExistsException("User not found");
+            throw new EntityDoesNotExistsException(USER_NOT_FOUND);
         }
     }
 
@@ -87,7 +90,7 @@ public class UserService {
 
     private void isUserExistsByEmail(String email) {
         if(userRepository.existsByEmail(email)) {
-            throw new EntityAlreadyExistsException("User already exists");
+            throw new EntityAlreadyExistsException(USER_ALREADY_EXISTS + email);
         }
     }
 
@@ -95,7 +98,7 @@ public class UserService {
         try {
             return userRepository.save(user);
         } catch (DataIntegrityViolationException ex) {
-            throw new EntityAlreadyExistsException("User with such email already exists: " + user.getEmail());
+            throw new EntityAlreadyExistsException(USER_ALREADY_EXISTS + user.getEmail());
         }
     }
 
