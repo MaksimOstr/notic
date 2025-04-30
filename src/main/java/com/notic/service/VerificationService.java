@@ -31,7 +31,7 @@ public class VerificationService {
     }
 
     @Transactional
-    public void verifyCode(long code) {
+    public void verifyCode(int code) {
         long userId = verificationCodeService.validate(code);
 
         userService.markUserAsVerified(userId);

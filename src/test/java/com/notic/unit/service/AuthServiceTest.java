@@ -163,7 +163,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void InvalidRefreshToken() {
+    void refreshTokens() {
         String newRefreshToken = "newRefreshToken";
         String accessToken = "accessToken";
         String refreshToken = "refreshToken";

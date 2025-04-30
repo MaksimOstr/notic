@@ -2,16 +2,19 @@ package com.notic.unit.service;
 
 import com.notic.dto.CreateLocalUserDto;
 import com.notic.dto.CreateProfileDto;
+import com.notic.dto.CreateProviderUserDto;
 import com.notic.dto.UserWithProfileDto;
 import com.notic.entity.Profile;
 import com.notic.entity.Role;
 import com.notic.entity.User;
+import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.repository.UserRepository;
 import com.notic.service.ProfileService;
 import com.notic.service.RoleService;
 import com.notic.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -112,12 +115,87 @@ public class UserServiceTest {
     }
 
 
+    @Nested
+    class CreateProviderUser {
+        AuthProviderEnum provider = AuthProviderEnum.GOOGLE;
+        String email = "email";
+        String username = "username";
+        String avatar = "avatar";
+        CreateProviderUserDto dto = new CreateProviderUserDto(
+                provider,
+                email,
+                username,
+                avatar
+        );
+
+        @Test
+        void shouldReturnUser() {
+            User user = new User();
+            when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+
+            User result = userService.createProviderUser(dto);
+
+            verify(userRepository).findByEmail(dto.email());
+            verifyNoMoreInteractions(userRepository);
+            verifyNoInteractions(roleService, passwordEncoder, profileService);
+
+            assertEquals(user, result);
+        }
+
+        @Test
+        void shouldReturnNewUser() {
+            Role role = new Role("ROLE_USER");
+            ArgumentCaptor<CreateProfileDto> captor = ArgumentCaptor.forClass(CreateProfileDto.class);
+            ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+            User user = new User();
+
+            when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(roleService.getDefaultRole()).thenReturn(role);
+            when(profileService.createProfile(any(CreateProfileDto.class))).thenReturn(new Profile());
+
+            User result = userService.createProviderUser(dto);
+
+            verify(userRepository).findByEmail(dto.email());
+            verify(userRepository).save(userCaptor.capture());
+            verify(profileService).createProfile(captor.capture());
+
+            CreateProfileDto profileDto = captor.getValue();
+            User savedUser = userCaptor.getValue();
+
+            assertEquals(dto.avatar(), profileDto.avatar());
+            assertEquals(dto.username(), profileDto.username());
+            assertEquals(dto.email(), savedUser.getEmail());
+            assertEquals(Set.of(role), savedUser.getRoles());
+            assertEquals(user, result);
+        }
+    }
+
 
     @Test
-    void userExists() {
+    void getUserByEmail() {
+        String email = "email";
+        User user = new User();
+        user.setEmail(email);
+
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+
+        Optional<User> result = userService.getUserByEmail(email);
+
+        verify(userRepository).findByEmail(email);
+
+        assertTrue(result.isPresent());
+        assertEquals(user, result.get());
+        assertEquals(email, result.get().getEmail());
+    }
+
+
+    @Test
+    void getUserByEmailWithRoles() {
         String email = "test@gmail.com";
         String password = "12121212";
-        User user = new User(email, password, Set.of(new Role("ROLE_USER")));
+        Set<Role> roles = Set.of(new Role("ROLE_USER"));
+        User user = new User(email, password, roles);
 
         when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
 
@@ -126,8 +204,13 @@ public class UserServiceTest {
         verify(userRepository).findByEmailWithRoles(email);
 
         assertTrue(result.isPresent());
-        assertNotNull(result.get());
-        assertEquals(user, result.get());
+
+        User resultUser = result.get();
+
+        assertNotNull(resultUser);
+        assertEquals(user, resultUser);
+        assertEquals(email, resultUser.getEmail());
+        assertEquals(roles, resultUser.getRoles());
     }
 
 

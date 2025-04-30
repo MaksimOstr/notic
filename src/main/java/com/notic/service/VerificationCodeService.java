@@ -39,7 +39,7 @@ public class VerificationCodeService {
     }
 
     @Transactional
-    public long validate(long code) {
+    public long validate(int code) {
         VerificationCode verificationCode = findByCode(code)
                 .orElseThrow(() -> new VerificationCodeException("Invalid verification code"));
 
@@ -75,7 +75,7 @@ public class VerificationCodeService {
         return Instant.now().plusSeconds(60 * CODE_EXPIRY_MINUTES);
     }
 
-    private Optional<VerificationCode> findByCode(long code) {
+    private Optional<VerificationCode> findByCode(int code) {
         return verificationCodeRepository.findByCode(code);
     }
 

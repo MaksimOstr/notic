@@ -63,7 +63,7 @@ public class VerificationController {
             @RequestBody
             VerificationCodeRequestDto body
     ) {
-            long parsedCode = Long.parseLong(body.code());
+            int parsedCode = Integer.parseInt(body.code());
             verificationService.verifyCode(parsedCode);
             String response = "Email successfully verified";
             return ResponseEntity.ok(response);
