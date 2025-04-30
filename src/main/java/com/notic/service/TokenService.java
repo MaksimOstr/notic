@@ -2,7 +2,6 @@ package com.notic.service;
 
 import com.notic.dto.response.TokenResponse;
 import com.notic.entity.RefreshToken;
-import com.notic.entity.Role;
 import com.notic.entity.User;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.notic.utils.UserUtils.mapUserRoles;
 
@@ -40,5 +38,4 @@ public class TokenService {
     private String getAccessToken(long userId, Set<String> roleNames) {
         return jwtTokenService.getJwsToken(roleNames, userId);
     }
-
 }

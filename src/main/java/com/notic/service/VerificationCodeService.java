@@ -7,6 +7,7 @@ import com.notic.exception.VerificationCodeException;
 import com.notic.repository.VerificationCodeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,9 @@ import java.util.Optional;
 @Slf4j
 public class VerificationCodeService {
     private static final SecureRandom random = new SecureRandom();
-    private static final long MIN_CODE = 10_000_000L;
-    private static final long MAX_CODE = 99_999_999L;
-    private static final int CODE_RANGE = (int) (MAX_CODE - MIN_CODE + 1);
+    private static final int MIN_CODE = 10_000_000;
+    private static final int MAX_CODE = 99_999_999;
+    private static final int CODE_RANGE = MAX_CODE - MIN_CODE + 1;
     private static final int CODE_EXPIRY_MINUTES = 15;
 
     private final VerificationCodeRepository verificationCodeRepository;
@@ -35,7 +36,11 @@ public class VerificationCodeService {
                 getExpiryDate()
         );
 
-        return verificationCodeRepository.save(verificationCode);
+        try {
+            return verificationCodeRepository.save(verificationCode);
+        } catch (DataIntegrityViolationException e) {
+            throw new EntityAlreadyExistsException("Failed to generate unique verification code due to conflict");
+        }
     }
 
     @Transactional
@@ -68,7 +73,7 @@ public class VerificationCodeService {
     }
 
     private int generate8DigitCode() {
-        return Math.toIntExact(MIN_CODE + random.nextInt((CODE_RANGE)));
+        return MIN_CODE + random.nextInt((CODE_RANGE));
     }
 
     private Instant getExpiryDate() {
