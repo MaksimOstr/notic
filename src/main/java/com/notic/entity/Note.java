@@ -1,6 +1,7 @@
 package com.notic.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.notic.enums.NoteVisibilityEnum;
 import jakarta.persistence.*;
 import lombok.Getter;

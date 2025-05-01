@@ -38,13 +38,7 @@ public class NoteController {
                     responseCode = "201",
                     description = "Note was successfully created",
                     content = @Content(
-                            examples = @ExampleObject(
-                                    value = "{\"id\": 453,\n" +
-                                            "\t\"title\": \"11\",\n" +
-                                            "\t\"content\": null,\n" +
-                                            "\t\"visibility\": \"PUBLIC\",\n" +
-                                            "\t\"createdAt\": \"2025-04-01T17:27:22.498840400Z\"}"
-                            )
+                            schema = @Schema(implementation = Note.class)
                     )
             ),
             @ApiResponse(

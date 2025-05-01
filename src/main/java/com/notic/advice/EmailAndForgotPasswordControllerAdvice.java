@@ -1,6 +1,7 @@
 package com.notic.advice;
 
-import com.notic.controller.VerificationController;
+import com.notic.controller.EmailVerificationController;
+import com.notic.controller.ForgotPasswordController;
 import com.notic.dto.response.ApiErrorResponse;
 import com.notic.exception.VerificationCodeException;
 import org.springframework.http.HttpStatus;
@@ -8,8 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = VerificationController.class)
-public class VerificationControllerAdvice {
+@RestControllerAdvice(assignableTypes = {EmailVerificationController.class, ForgotPasswordController.class})
+public class EmailAndForgotPasswordControllerAdvice {
 
     @ExceptionHandler(VerificationCodeException.class)
     public ResponseEntity<ApiErrorResponse> handleVerificationCodeException(VerificationCodeException e) {

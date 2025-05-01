@@ -75,7 +75,7 @@ public class VerificationServiceTest {
 
         when(verificationCodeService.validate(anyInt())).thenReturn(userId);
 
-        verificationService.verifyCode(code);
+        verificationService.verifyEmail(code);
 
         verify(verificationCodeService).validate(code);
         verify(userService).markUserAsVerified(userId);

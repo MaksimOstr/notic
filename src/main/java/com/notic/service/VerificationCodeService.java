@@ -2,6 +2,7 @@ package com.notic.service;
 
 import com.notic.entity.User;
 import com.notic.entity.VerificationCode;
+import com.notic.enums.VerificationCodeScopeEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.VerificationCodeException;
 import com.notic.repository.VerificationCodeRepository;
@@ -29,11 +30,12 @@ public class VerificationCodeService {
 
     private final VerificationCodeRepository verificationCodeRepository;
 
-    public VerificationCode create(User user) {
+    public VerificationCode create(User user, VerificationCodeScopeEnum scope) {
         VerificationCode verificationCode = new VerificationCode(
                 user,
-                generateUniqueCode(),
-                getExpiryDate()
+                generateUniqueCode(scope),
+                getExpiryDate(),
+                scope
         );
 
         try {
@@ -44,13 +46,13 @@ public class VerificationCodeService {
     }
 
     @Transactional
-    public long validate(int code) {
-        VerificationCode verificationCode = findByCode(code)
+    public long validate(int code, VerificationCodeScopeEnum scope) {
+        VerificationCode verificationCode = findByCode(code, scope)
                 .orElseThrow(() -> new VerificationCodeException("Invalid verification code"));
-
         Instant expiryAt = verificationCode.getExpiresAt();
 
         if(expiryAt.isBefore(Instant.now())) {
+            deleteById(verificationCode.getId());
             throw new VerificationCodeException("Expired verification code");
         }
 
@@ -62,10 +64,10 @@ public class VerificationCodeService {
     }
 
 
-    private int generateUniqueCode() {
+    private int generateUniqueCode(VerificationCodeScopeEnum scope) {
         for (int i = 0; i < 5; i++) {
             int code = generate8DigitCode();
-            if (!verificationCodeRepository.existsByCode(code)) {
+            if (!verificationCodeRepository.existsByCodeAndScope(code, scope)) {
                 return code;
             }
         }
@@ -80,8 +82,8 @@ public class VerificationCodeService {
         return Instant.now().plusSeconds(60 * CODE_EXPIRY_MINUTES);
     }
 
-    private Optional<VerificationCode> findByCode(int code) {
-        return verificationCodeRepository.findByCode(code);
+    private Optional<VerificationCode> findByCode(int code, VerificationCodeScopeEnum scope) {
+        return verificationCodeRepository.findByCodeAndScope(code, scope);
     }
 
     private void deleteById(long id) {

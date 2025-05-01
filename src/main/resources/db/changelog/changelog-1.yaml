@@ -197,7 +197,7 @@ databaseChangeLog:
                     deleteCascade: true
               - column:
                   name: visibility
-                  type: varchar(30)
+                  type: varchar(20)
                   constraints:
                     nullable: false
               - column:
@@ -229,6 +229,11 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: scope
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
                   name: code
                   type: int
                   constraints:
@@ -239,6 +244,10 @@ databaseChangeLog:
                   type: timestamp
                   constraints:
                     nullable: false
+        - addUniqueConstraint:
+            tableName: verification_codes
+            columnNames: code, scope
+            constraintName: uc_code_scope
         - addForeignKeyConstraint:
             baseTableName: verification_codes
             baseColumnNames: user_id

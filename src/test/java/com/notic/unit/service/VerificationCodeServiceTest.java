@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
+
 @ExtendWith(MockitoExtension.class)
 public class VerificationCodeServiceTest {
     @Mock
@@ -85,7 +86,6 @@ public class VerificationCodeServiceTest {
             verificationCode.setCode(code);
             verificationCode.setExpiresAt(Instant.now().plusSeconds(3600));
         }
-
 
 
         @Test

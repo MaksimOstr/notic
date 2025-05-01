@@ -69,8 +69,20 @@ public class UserService {
         return userRepository.existsById(id);
     }
 
+    @Transactional
     public void markUserAsVerified(long id) {
         int updated = userRepository.updateEnabledStatusById(id, true);
+        if(updated == 0) {
+            throw new EntityDoesNotExistsException(USER_NOT_FOUND);
+        }
+    }
+
+    @Transactional
+    public void updatePassword(long id, String newPassword) {
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        int updated = userRepository.updatePasswordById(id, encodedPassword);
+
         if(updated == 0) {
             throw new EntityDoesNotExistsException(USER_NOT_FOUND);
         }
