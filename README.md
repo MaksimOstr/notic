@@ -18,9 +18,9 @@ This is a backend app which was meant for notes service. Such features was imple
 
 - **Core**: Java, Spring framework, Spring Boot
 
-- **Database & Persistence**: Spring Data JPA (Hybernate), PostgreSQL
+- **Database & Persistence**: Spring Data JPA (Hybernate), PostgreSQL, LiquidBase
 
-- **Security**: Spring Security, jjwt, Spring Oauth2 client
+- **Security**: Spring Security, Spring Resource Server, Spring Oauth2 client
 
 - **Cloud & Storage**: AWS s3 (to store user avatars)
 
@@ -44,13 +44,14 @@ This is a backend app which was meant for notes service. Such features was imple
     PG_ADMIN_PASSWORD
     ```
 
-    **Jwt local auth:**
+    **Local auth:**
     ```
     JWT_SECRET
     JWT_ISSUER
     JWT_EXPIRE_TIME
     REFRESH_TOKEN_SECRET
     REFRESH_TOKEN_TTL
+    JWT_HEADER_ALG
     NIMBUS_ALG
     ```
 
@@ -65,6 +66,7 @@ This is a backend app which was meant for notes service. Such features was imple
     AWS_ACCESS_KEY
     AWS_SECRET_ACCESS_KEY
     AWS_REGION
+    AWS_AVATAR_BUCKET_NAME
     ```
 
     **Oauth2 client:**
