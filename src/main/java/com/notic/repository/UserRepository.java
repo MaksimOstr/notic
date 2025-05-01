@@ -1,7 +1,6 @@
 package com.notic.repository;
 
 import com.notic.entity.User;
-import com.notic.projection.GetUserAvatarProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,15 +16,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN FETCH u.roles WHERE u.email = :email")
     Optional<User> findByEmailWithRoles(String email);
 
+    Optional<User> findByEmail(String email);
+
     @Modifying
-    @Transactional
     @Query("UPDATE User u SET u.enabled = :enabled WHERE u.id = :id")
     int updateEnabledStatusById(@Param("id") long id, @Param("enabled") boolean enabled);
 
     @Modifying
-    @Transactional
-    @Query("UPDATE User u SET u.avatar = :avatar WHERE u.id = :id")
-    int updateUserAvatarById(@Param("id") long id, @Param("avatar") String avatarUrl);
-
-    Optional<GetUserAvatarProjection> getUserAvatarUrlById(long id);
+    @Query("UPDATE User u SET u.password = :password WHERE u.id = :id")
+    int updatePasswordById(@Param("id") long id, @Param("password") String password);
 }

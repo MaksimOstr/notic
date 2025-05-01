@@ -1,6 +1,5 @@
 package com.notic.unit.service;
 
-import com.notic.dto.RefreshTokenValidationResultDto;
 import com.notic.entity.RefreshToken;
 import com.notic.entity.User;
 import com.notic.exception.TokenValidationException;
@@ -27,6 +26,9 @@ public class RefreshTokenServiceTest {
     @Captor
     private ArgumentCaptor<RefreshToken> refreshTokenArgumentCaptor;
 
+    @Captor
+    private ArgumentCaptor<String> stringCaptor;
+
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
@@ -44,10 +46,9 @@ public class RefreshTokenServiceTest {
         private final User user = new User();
         @Test
         void tokenAlreadyExists() {
-
             when(refreshTokenRepository.findByUser(any(User.class))).thenReturn(Optional.empty());
 
-            String result = refreshTokenService.getRefreshToken(user);
+            String result = refreshTokenService.create(user);
 
             verify(refreshTokenRepository).findByUser(user);
             verify(refreshTokenRepository).save(refreshTokenArgumentCaptor.capture());
@@ -59,10 +60,9 @@ public class RefreshTokenServiceTest {
 
         @Test
         void tokenDoesNotExist() {
-
             when(refreshTokenRepository.findByUser(any(User.class))).thenReturn(Optional.of(new RefreshToken()));
 
-            String result = refreshTokenService.getRefreshToken(user);
+            String result = refreshTokenService.create(user);
 
             verify(refreshTokenRepository).findByUser(user);
             verifyNoMoreInteractions(refreshTokenRepository);
@@ -72,49 +72,60 @@ public class RefreshTokenServiceTest {
     }
 
     @Nested
-    class ValidateAndRotateToken {
+    class Validate {
         private final User user = new User();
         private final String refreshToken = "refreshToken";
         private final String hashedRefreshToken = "hashedRefreshToken";
+        private RefreshToken refreshTokenEntity;
+
+        @BeforeEach
+        void setUp() {
+            refreshTokenEntity = new RefreshToken();
+            refreshTokenEntity.setUser(user);
+            refreshTokenEntity.setToken(hashedRefreshToken);
+            refreshTokenEntity.setExpiresAt(Instant.now().plusSeconds(3600));
+        }
+
         @Test
         void tokenDoesNotExist() {
             when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.empty());
 
-            Exception exception = assertThrows(TokenValidationException.class, () -> refreshTokenService.validateAndRotateToken(refreshToken));
-            verify(refreshTokenRepository).findByToken(anyString());
+            assertThrows(TokenValidationException.class, () -> refreshTokenService.validate(refreshToken));
+            verify(refreshTokenRepository).findByToken(stringCaptor.capture());
+
+            assertNotEquals(refreshToken, stringCaptor.getValue());
             verifyNoMoreInteractions(refreshTokenRepository);
-            assertEquals("Refresh token not found", exception.getMessage());
         }
 
         @Test
         void tokenIsExpired() {
-            RefreshToken refreshTokenEntity = new RefreshToken(hashedRefreshToken, user, Instant.now().minusSeconds(3700));
+            long refreshTokenId = 1L;
+            refreshTokenEntity.setId(refreshTokenId);
+            refreshTokenEntity.setExpiresAt(Instant.now().minusSeconds(3600));
 
             when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.of(refreshTokenEntity));
 
-            Exception exception = assertThrows(TokenValidationException.class, () -> refreshTokenService.validateAndRotateToken(refreshToken));
+            assertThrows(TokenValidationException.class, () -> refreshTokenService.validate(refreshToken));
 
-            verify(refreshTokenRepository).findByToken(anyString());
-            verify(refreshTokenRepository).deleteById(anyLong());
-            assertEquals("Session is expired", exception.getMessage());
+            verify(refreshTokenRepository).findByToken(stringCaptor.capture());
+            verify(refreshTokenRepository).deleteById(refreshTokenId);
+
+            assertNotEquals(refreshToken, stringCaptor.getValue());
         }
 
 
         @Test
-        void succesfulValidateAndRotateToken() {
-            RefreshToken refreshTokenEntity = new RefreshToken(hashedRefreshToken, user, Instant.now().plusSeconds(3600));
+        void successfulValidation() {
             when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.of(refreshTokenEntity));
 
-            RefreshTokenValidationResultDto result = refreshTokenService.validateAndRotateToken(refreshToken);
+            RefreshToken result = refreshTokenService.validate(refreshToken);
 
-            verify(refreshTokenRepository).findByToken(anyString());
-            verifyNoMoreInteractions(refreshTokenRepository);
+            verify(refreshTokenRepository, never()).deleteById(anyLong());
+            verify(refreshTokenRepository).findByToken(stringCaptor.capture());
 
             assertNotNull(result);
-            assertNotEquals(refreshToken, result.refreshToken().getToken());
-            assertNotEquals(hashedRefreshToken, result.refreshToken().getToken());
-            assertNotEquals(refreshToken, result.rawRefreshToken());
-            assertNotEquals(result.rawRefreshToken(), result.refreshToken().getToken());
+            assertEquals(hashedRefreshToken, refreshTokenEntity.getToken());
+            assertNotEquals(result.getToken(), stringCaptor.getValue());
         }
     }
 }

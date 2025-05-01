@@ -1,6 +1,7 @@
 package com.notic.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.notic.enums.NoteVisibilityEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,7 +21,7 @@ import java.time.Instant;
 public class Note {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
 
     @Column(nullable = false)
@@ -37,6 +38,7 @@ public class Note {
     private NoteVisibilityEnum visibility;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public Note(String title, String content, User author, NoteVisibilityEnum visibility) {

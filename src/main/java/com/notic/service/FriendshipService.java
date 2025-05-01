@@ -2,11 +2,13 @@ package com.notic.service;
 
 import com.notic.entity.Friendship;
 import com.notic.entity.User;
-import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.FriendshipException;
 import com.notic.projection.FriendshipProjection;
 import com.notic.repository.FriendshipRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,19 +16,25 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.notic.criteria.FriendshipCriteria.existsFriendshipCriteria;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
-    private final UserService userService;
+    private final EntityManager entityManager;
 
-    private record FriendsPair(User user1, User user2) {}
 
     public void createFriendship(long userId1, long userId2) {
-        FriendsPair pair = getFriendsPair(userId1, userId2);
-        Friendship friendship = new Friendship(pair.user1(), pair.user2());
+        try {
+            User user1 = entityManager.getReference(User.class, userId1);
+            User user2 = entityManager.getReference(User.class, userId2);
+            Friendship friendship = new Friendship(user1, user2);
 
-        friendshipRepository.save(friendship);
+            friendshipRepository.save(friendship);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Friendship was not created{}", e.getMessage());
+            throw new FriendshipException("Friendship was not created");
+        }
     }
 
     
@@ -45,16 +53,5 @@ public class FriendshipService {
         if (delete == 0) {
             throw new FriendshipException("Friendship was not found");
         }
-    }
-
-
-    private FriendsPair getFriendsPair(long userId1, long userId2) {
-        User user1 = userService.getUserById(userId1)
-                .orElseThrow(() -> new EntityDoesNotExistsException("Sender not found"));
-
-        User user2 = userService.getUserById(userId2)
-                .orElseThrow(() -> new EntityDoesNotExistsException("Receiver not found"));
-
-        return new FriendsPair(user1, user2);
     }
 }

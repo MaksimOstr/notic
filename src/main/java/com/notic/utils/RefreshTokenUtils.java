@@ -15,6 +15,7 @@ public final class RefreshTokenUtils {
     private static final SecureRandom SECURE_RANDOM;
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
+
     static {
         try {
             SECURE_RANDOM = SecureRandom.getInstanceStrong();

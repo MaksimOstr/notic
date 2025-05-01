@@ -1,4 +1,4 @@
-package com.notic.dto;
+package com.notic.dto.request;
 
 import com.notic.enums.NoteVisibilityEnum;
 import com.notic.validators.ValueOfEnum;

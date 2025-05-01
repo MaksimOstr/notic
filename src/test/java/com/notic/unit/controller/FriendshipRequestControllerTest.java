@@ -5,7 +5,7 @@ import com.notic.advice.FriendshipControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
 import com.notic.config.security.model.CustomJwtUser;
 import com.notic.controller.FriendshipRequestController;
-import com.notic.dto.SendFriendshipRequestDto;
+import com.notic.dto.request.SendFriendshipRequestDto;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.FriendshipException;
 import com.notic.projection.FriendshipRequestProjection;

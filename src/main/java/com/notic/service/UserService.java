@@ -1,13 +1,17 @@
 package com.notic.service;
 
-import com.notic.dto.CreateUserDto;
+import com.notic.dto.CreateLocalUserDto;
+import com.notic.dto.CreateProfileDto;
+import com.notic.dto.CreateProviderUserDto;
+import com.notic.dto.UserWithProfileDto;
+import com.notic.entity.Profile;
 import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
-import com.notic.projection.GetUserAvatarProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,44 +26,70 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileService profileService;
+
+    private final static String USER_ALREADY_EXISTS = "User already exists with email:";
+    private final static String USER_NOT_FOUND = "User not found";
 
 
-    @Transactional(rollbackFor = EntityAlreadyExistsException.class)
-    public User createUser(CreateUserDto body) {
-        isUserExistsByEmail(body.email());
+    @Transactional
+    public UserWithProfileDto createUser(CreateLocalUserDto dto) {
+        isUserExistsByEmail(dto.email());
 
         User user = new User(
-                body.username(),
-                body.email(),
-                passwordEncoder.encode(body.password()),
+                dto.email(),
+                passwordEncoder.encode(dto.password()),
                 Set.of(roleService.getDefaultRole())
         );;
 
-        return userRepository.save(user);
+        User createdUser = saveUser(user);
+
+        Profile createdProfile = createUserProfile(createdUser, dto.username(), null);
+
+        return new UserWithProfileDto(createdUser, createdProfile);
     }
 
-    public User createGoogleUser(CreateUserDto body) {
-        Optional<User> optionalUser = getUserByEmailWithRoles(body.email());
-        if(optionalUser.isEmpty()) {
-            User user = new User(
-                    body.username(),
-                    body.email(),
-                    Set.of(roleService.getDefaultRole()),
-                    AuthProviderEnum.GOOGLE
-            );
+    @Transactional
+    public User createProviderUser(CreateProviderUserDto dto) {
+        return userRepository.findByEmail(dto.email())
+                .orElseGet(() -> {
+                    User newUser = new User(
+                            dto.email(),
+                            Set.of(roleService.getDefaultRole()),
+                            AuthProviderEnum.GOOGLE
+                    );
+                    User user = saveUser(newUser);
 
-            return userRepository.save(user);
-        }
-
-        return optionalUser.get();
-    }
-
-    public Optional<GetUserAvatarProjection> getUserAvatarById(long id) {
-        return userRepository.getUserAvatarUrlById(id);
+                    createUserProfile(user, dto.username(), dto.avatar());
+                    return user;
+                });
     }
 
     public boolean isUserExistsById(long id) {
         return userRepository.existsById(id);
+    }
+
+    @Transactional
+    public void markUserAsVerified(long id) {
+        int updated = userRepository.updateEnabledStatusById(id, true);
+        if(updated == 0) {
+            throw new EntityDoesNotExistsException(USER_NOT_FOUND);
+        }
+    }
+
+    @Transactional
+    public void updatePassword(long id, String newPassword) {
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        int updated = userRepository.updatePasswordById(id, encodedPassword);
+
+        if(updated == 0) {
+            throw new EntityDoesNotExistsException(USER_NOT_FOUND);
+        }
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public Optional<User> getUserById(long id) {
@@ -72,21 +102,21 @@ public class UserService {
 
     private void isUserExistsByEmail(String email) {
         if(userRepository.existsByEmail(email)) {
-            throw new EntityAlreadyExistsException("User already exists");
+            throw new EntityAlreadyExistsException(USER_ALREADY_EXISTS + email);
         }
     }
 
-    public void markUserAsVerified(long id) {
-        int updated = userRepository.updateEnabledStatusById(id, true);
-        if(updated == 0) {
-            throw new EntityDoesNotExistsException("User not found");
+    private User saveUser(User user) {
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            throw new EntityAlreadyExistsException(USER_ALREADY_EXISTS + user.getEmail());
         }
     }
 
-    public void updateUserAvatarById(long id, String avatarUrl) {
-        int updated = userRepository.updateUserAvatarById(id, avatarUrl);
-        if(updated == 0) {
-            throw new EntityDoesNotExistsException("User not found");
-        }
+    private Profile createUserProfile(User user, String username, String avatar) {
+        return profileService.createProfile(
+                new CreateProfileDto(username, avatar, user)
+        );
     }
 }

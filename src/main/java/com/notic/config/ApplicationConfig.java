@@ -6,7 +6,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 @Configuration
-@EnableScheduling
 @EnableSpringDataWebSupport(
         pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO
 )

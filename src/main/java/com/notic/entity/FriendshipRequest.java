@@ -25,7 +25,7 @@ import java.time.Instant;
 @EntityListeners(AuditingEntityListener.class)
 public class FriendshipRequest {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -35,6 +35,7 @@ public class FriendshipRequest {
     private User receiver;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public FriendshipRequest(User sender, User receiver) {

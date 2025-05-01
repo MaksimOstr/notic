@@ -2,8 +2,11 @@ package com.notic.advice;
 
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.EntityAlreadyExistsException;
-import com.notic.exception.FileProcessingException;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +34,14 @@ public class GlobalControllerAdvice {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    @ApiResponse(responseCode = "500",
+            description = "When IOException happened",
+            content = @Content(
+            examples = @ExampleObject(
+                  "{\t\"code\": \"Internal server error\",\t\"message\": \"IOException has been thrown\",\t\"status\": 500}"
+            ),
+            schema = @Schema(implementation = ApiErrorResponse.class)
+    ))
     @ExceptionHandler(IOException.class)
     private ResponseEntity<ApiErrorResponse> handleFileProcessingException(IOException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value()));

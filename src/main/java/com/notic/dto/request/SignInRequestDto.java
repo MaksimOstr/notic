@@ -1,11 +1,11 @@
-package com.notic.dto;
+package com.notic.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 
-public record SignInDto(
+public record SignInRequestDto(
         @Schema(
                 description = "User email",
                 example = "user@example.com"

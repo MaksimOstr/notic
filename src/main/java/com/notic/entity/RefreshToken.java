@@ -19,7 +19,8 @@ import java.time.Instant;
                 @NamedSubgraph(
                         name = "userRoles",
                         attributeNodes = {
-                                @NamedAttributeNode("roles")
+                                @NamedAttributeNode("roles"),
+                                @NamedAttributeNode("profile")
                         }
                 )
         }
@@ -27,7 +28,7 @@ import java.time.Instant;
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
 
     @Column(unique = true, nullable = false)
@@ -36,7 +37,7 @@ public class RefreshToken {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
     public RefreshToken(String token, User user, Instant expiresAt) {

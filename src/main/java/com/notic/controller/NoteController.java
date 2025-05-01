@@ -1,16 +1,17 @@
 package com.notic.controller;
 
 import com.notic.config.security.model.CustomJwtUser;
-import com.notic.dto.CreateNoteDto;
-import com.notic.dto.UpdateNoteDto;
+import com.notic.dto.request.CreateNoteDto;
+import com.notic.dto.request.UpdateNoteDto;
 import com.notic.entity.Note;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
 import com.notic.service.NoteService;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -37,13 +38,7 @@ public class NoteController {
                     responseCode = "201",
                     description = "Note was successfully created",
                     content = @Content(
-                            examples = @ExampleObject(
-                                    value = "{\"id\": 453,\n" +
-                                            "\t\"title\": \"11\",\n" +
-                                            "\t\"content\": null,\n" +
-                                            "\t\"visibility\": \"PUBLIC\",\n" +
-                                            "\t\"createdAt\": \"2025-04-01T17:27:22.498840400Z\"}"
-                            )
+                            schema = @Schema(implementation = Note.class)
                     )
             ),
             @ApiResponse(
@@ -74,8 +69,7 @@ public class NoteController {
     ) {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Note> pageOfNotes = noteService.getPageOfNotes(principal.getId(), pageable);
-
+        Page<Note> pageOfNotes = noteService.getPersonalNotes(principal.getId(), pageable);
         return ResponseEntity.ok(pageOfNotes);
     }
 

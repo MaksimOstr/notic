@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import software.amazon.awssdk.services.s3.model.PutBucketLifecycleConfigurationRequest;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -24,21 +26,18 @@ import java.util.Set;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
-
-    @Column(nullable = false)
-    private String username;
 
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(length = 100)
     private String password;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
-    private String avatar;
 
     @Enumerated(EnumType.STRING)
     private AuthProviderEnum authProvider;
@@ -47,22 +46,24 @@ public class User {
     private Boolean accountNonLocked = true;
 
     @Column(nullable = false)
-    private Boolean enabled = false;
+    private Boolean enabled = true;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonManagedReference
     private List<Note> notes;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, optional = false, orphanRemoval = true)
+    private Profile profile;
+
     @ManyToMany
     @JoinTable(
-            name = "user_role",
+            name = "users_role",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
 
-    public User(String username, String email, String password, Set<Role> roles) {
-        this.username = username;
+    public User(String email, String password, Set<Role> roles) {
         this.email = email;
         this.password = password;
         this.roles = roles;
@@ -70,8 +71,7 @@ public class User {
 
     }
 
-    public User(String username, String email, Set<Role> roles, AuthProviderEnum authProvider) {
-        this.username = username;
+    public User(String email, Set<Role> roles, AuthProviderEnum authProvider) {
         this.email = email;
         this.enabled = true;
         this.roles = roles;

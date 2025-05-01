@@ -24,7 +24,7 @@ public class NotificationServiceTest {
 
 
     @Test
-    public void sendFriendshipRequestNotification() throws Exception {
+    public void sendFriendshipRequestNotification() {
         String receiverId = UUID.randomUUID().toString();
         String username = UUID.randomUUID().toString();
         String avatar = UUID.randomUUID().toString();

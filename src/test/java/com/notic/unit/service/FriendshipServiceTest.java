@@ -2,18 +2,20 @@ package com.notic.unit.service;
 
 import com.notic.entity.Friendship;
 import com.notic.entity.User;
+import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.FriendshipException;
 import com.notic.projection.FriendshipProjection;
 import com.notic.repository.FriendshipRepository;
 import com.notic.service.FriendshipService;
 import com.notic.service.UserService;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
@@ -30,37 +32,63 @@ public class FriendshipServiceTest {
     private FriendshipRepository friendshipRepository;
 
     @Mock
-    private UserService userService;
+    private EntityManager entityManager;
 
     @InjectMocks
     private FriendshipService friendshipService;
 
-    private final long userId1 = 1L;
-    private final long userId2 = 2L;
+    @Captor
+    private ArgumentCaptor<Friendship> friendshipCaptor;
 
-    @Test
-    void shouldCreateFriendship() {
-        User user1 = new User("Ivan", "test", "pass", Set.of());
-        User user2 = new User("Oleg", "test", "pass", Set.of());
+    private final long userId1 = 1123L;
+    private final long userId2 = 4232342L;
 
-        user1.setId(userId1);
-        user2.setId(userId2);
+    @Nested
+    class CreateFriendship {
+        User user1 = new User();
+        User user2 = new User();
 
-        ArgumentCaptor<Friendship> captor = ArgumentCaptor.forClass(Friendship.class);
+        @BeforeEach
+        void setUp() {
+            user1.setId(userId1);
+            user2.setId(userId2);
+        }
 
-        when(userService.getUserById(userId1)).thenReturn(Optional.of(user1));
-        when(userService.getUserById(userId2)).thenReturn(Optional.of(user2));
+        @Test
+        void shouldCreateFriendship() {
+            when(entityManager.getReference(User.class, userId1)).thenReturn(user1);
+            when(entityManager.getReference(User.class, userId2)).thenReturn(user2);
 
-        friendshipService.createFriendship(userId1, userId2);
+            friendshipService.createFriendship(userId1, userId2);
 
-        verify(friendshipRepository).save(captor.capture());
-        verify(userService).getUserById(userId1);
-        verify(userService).getUserById(userId2);
+            verify(friendshipRepository).save(friendshipCaptor.capture());
+            verify(entityManager).getReference(User.class, userId1);
+            verify(entityManager).getReference(User.class, userId2);
 
-        Friendship saved = captor.getValue();
+            Friendship saved = friendshipCaptor.getValue();
 
-        assertEquals(userId1, saved.getUser1().getId());
-        assertEquals(userId2, saved.getUser2().getId());
+            assertEquals(userId1, saved.getUser1().getId());
+            assertEquals(userId2, saved.getUser2().getId());
+        }
+
+
+        @Test
+        void shouldThrowDataIntegrityViolationException() {
+            when(entityManager.getReference(User.class, userId1)).thenReturn(user1);
+            when(entityManager.getReference(User.class, userId2)).thenReturn(user2);
+            when(friendshipRepository.save(any(Friendship.class))).thenThrow(new DataIntegrityViolationException(""));
+
+            assertThrows(FriendshipException.class, () -> friendshipService.createFriendship(userId1, userId2));
+
+            verify(friendshipRepository).save(friendshipCaptor.capture());
+            verify(entityManager).getReference(User.class, userId1);
+            verify(entityManager).getReference(User.class, userId2);
+
+            Friendship saved = friendshipCaptor.getValue();
+
+            assertEquals(userId1, saved.getUser1().getId());
+            assertEquals(userId2, saved.getUser2().getId());
+        }
     }
 
     @Test

@@ -9,7 +9,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
+@Repository
 public interface FriendshipRequestRepository extends JpaRepository<FriendshipRequest, Long>, JpaSpecificationExecutor<FriendshipRequest> {
 
 
@@ -20,10 +24,22 @@ public interface FriendshipRequestRepository extends JpaRepository<FriendshipReq
     @Query("""
     SELECT new com.notic.projection.FriendshipRequestProjection(
         fr.id,
-        fr.sender.username,
-        fr.sender.avatar,
+        fr.sender.profile.username,
+        fr.sender.profile.avatar,
         fr.createdAt
         ) FROM FriendshipRequest fr WHERE fr.receiver.id = :receiverId
     """)
     Page<FriendshipRequestProjection> getAllFriendshipRequests(@Param("receiverId") long receiverId, Pageable pageable);
+
+    @Query("""
+    SELECT 
+        fr.id as id,
+        fr.sender.id as senderId,
+        fr.receiver.id as receiverId,
+        fr.receiver.profile.avatar as receiverAvatar,
+        fr.receiver.profile.username as receiverUsername
+    FROM FriendshipRequest fr
+    WHERE fr.id = :id
+""")
+    <T> Optional<T> findById(long id, Class<T> projection);
 }

@@ -1,6 +1,10 @@
 package com.notic.advice;
 
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,6 +15,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @RestControllerAdvice
 public class AwsExceptionHandler {
+
+
     @ExceptionHandler(S3Exception.class)
     public ResponseEntity<ApiErrorResponse> handleS3Exception(S3Exception ex) {
 

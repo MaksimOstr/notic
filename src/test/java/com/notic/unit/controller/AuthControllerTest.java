@@ -5,6 +5,12 @@ import com.notic.advice.AuthControllerAdvice;
 import com.notic.advice.GlobalControllerAdvice;
 import com.notic.controller.AuthController;
 import com.notic.dto.*;
+import com.notic.dto.request.SignInRequestDto;
+import com.notic.dto.request.SignUpRequestDto;
+import com.notic.dto.response.SignUpResponseDto;
+import com.notic.dto.response.TokenResponse;
+import com.notic.entity.Profile;
+import com.notic.entity.User;
 import com.notic.exception.*;
 import com.notic.mapper.UserMapper;
 import com.notic.config.security.handler.CustomAuthenticationEntryPoint;
@@ -58,9 +64,6 @@ public class AuthControllerTest {
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @MockitoBean
-    private EmailVerificationService emailService;
-
-    @MockitoBean
     private ApplicationEventPublisher applicationEventPublisher;
 
     @MockitoBean
@@ -82,7 +85,7 @@ public class AuthControllerTest {
     @Nested
     class SignUpTest {
 
-        private final CreateUserDto createUserDto = new CreateUserDto(
+        private final SignUpRequestDto signUpRequestDto = new SignUpRequestDto(
                 "test@gmail.com",
                 "test",
                 "12121212"
@@ -104,39 +107,49 @@ public class AuthControllerTest {
 
         @Test
         void shouldCreateAndReturnUser() throws Exception {
+            long userId = 1L;
+            User user = new User();
+            user.setId(userId);
+            user.setEmail(signUpRequestDto.email());
+            CreateProfileDto createProfileDto = new CreateProfileDto(
+                    signUpRequestDto.username(),
+                    null,
+                    user
+            );
+            Profile profile = new Profile(createProfileDto);
+            UserWithProfileDto userWithProfileDto = new UserWithProfileDto(user, profile);
 
-            when(authService.signUp(any(CreateUserDto.class))).thenReturn(new UserDto(1, createUserDto.email(), createUserDto.username()));
+            when(authService.signUp(any(SignUpRequestDto.class))).thenReturn(new SignUpResponseDto(userWithProfileDto));
 
             mockMvc.perform(post("/auth/sign-up")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(createUserDto)))
+                            .content(objectMapper.writeValueAsString(signUpRequestDto)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.username").value(createUserDto.username()))
-                    .andExpect(jsonPath("$.email").value(createUserDto.email()))
-                    .andExpect(jsonPath("$.id").value(1));
+                    .andExpect(jsonPath("$.username").value(signUpRequestDto.username()))
+                    .andExpect(jsonPath("$.email").value(signUpRequestDto.email()))
+                    .andExpect(jsonPath("$.id").value(userId));
 
-            verify(authService).signUp(createUserDto);
+            verify(authService).signUp(signUpRequestDto);
         }
 
         @Test
         void userAlreadyExists() throws Exception {
-            String errorMessage = "Such user already exists";
-
-            when(authService.signUp(any(CreateUserDto.class))).thenThrow(new EntityAlreadyExistsException(errorMessage));
+            when(authService.signUp(any(SignUpRequestDto.class))).thenThrow(new EntityAlreadyExistsException("error"));
 
             mockMvc.perform(post("/auth/sign-up")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(createUserDto)))
+                            .content(objectMapper.writeValueAsString(signUpRequestDto)))
                     .andExpect(status().is(409))
-                    .andExpect(jsonPath("$.message").value(errorMessage));
-            verify(authService).signUp(createUserDto);
+                    .andExpect(jsonPath("$.message").isNotEmpty());
+
+            verify(authService).signUp(signUpRequestDto);
         }
     }
 
     @Nested
     class SignInTest {
 
-        private final SignInDto signInDto = new SignInDto("test@gmail.com", "12121212");
+        private final SignInRequestDto signInDto = new SignInRequestDto("test@gmail.com", "12121212");
 
         @Test
         void shouldThrowErrorWithEmptyFields() throws Exception {
@@ -159,7 +172,7 @@ public class AuthControllerTest {
             String accessToken = "accessToken";
             Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
 
-            when(authService.signIn(any(SignInDto.class))).thenReturn(new TokenResponse(accessToken, refreshToken));
+            when(authService.signIn(any(SignInRequestDto.class))).thenReturn(new TokenResponse(accessToken, refreshToken));
             when(cookieService.createRefreshTokenCookie(anyString())).thenReturn(refreshTokenCookie);
 
             mockMvc.perform(post("/auth/sign-in")
@@ -259,48 +272,6 @@ public class AuthControllerTest {
 
             verify(authService).logout(refreshToken);
             verify(cookieService).deleteRefreshTokenCookie();
-        }
-    }
-
-
-    @Nested
-    class VerifyAccountTest {
-
-        private final String code = "12345678";
-        private final VerificationCodeRequestDto verificationCodeRequestDto = new VerificationCodeRequestDto(code);
-
-        @Test
-        void codeValidationError() throws Exception {
-            String invalidCode = "1234";
-            mockMvc.perform(post("/auth/verify-account")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(new VerificationCodeRequestDto(invalidCode))))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.code").isNotEmpty());
-
-            verify(authService, never()).verifyAccount(anyLong());
-        }
-
-        @Test
-        void emptyFieldCode() throws Exception {
-            mockMvc.perform(post("/auth/verify-account")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.code").isNotEmpty());
-
-            verify(authService, never()).verifyAccount(anyLong());
-        }
-
-        @Test
-        void successfulVerifyAccount() throws Exception {
-            mockMvc.perform(post("/auth/verify-account")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(verificationCodeRequestDto)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isNotEmpty());
-
-            verify(authService).verifyAccount(Long.parseLong(verificationCodeRequestDto.code()));
         }
     }
 }

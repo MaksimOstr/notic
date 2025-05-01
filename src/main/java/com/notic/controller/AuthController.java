@@ -1,9 +1,12 @@
 package com.notic.controller;
 
-import com.notic.dto.*;
+import com.notic.dto.request.SignInRequestDto;
+import com.notic.dto.request.SignUpRequestDto;
+import com.notic.dto.response.SignUpResponseDto;
+import com.notic.dto.response.TokenResponse;
 import com.notic.exception.InvalidLogoutRequestException;
 import com.notic.exception.TokenValidationException;
-import com.notic.response.ApiErrorResponse;
+import com.notic.dto.response.ApiErrorResponse;
 import com.notic.service.AuthService;
 import com.notic.service.CookieService;
 import com.notic.utils.RefreshTokenUtils;
@@ -48,8 +51,8 @@ public class AuthController {
             )
     })
     @PostMapping("/sign-up")
-    public ResponseEntity<UserDto> signUp(@Valid @RequestBody CreateUserDto body) {
-        UserDto user = authService.signUp(body);
+    public ResponseEntity<SignUpResponseDto> signUp(@Valid @RequestBody SignUpRequestDto body) {
+        SignUpResponseDto user = authService.signUp(body);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
@@ -78,7 +81,7 @@ public class AuthController {
     })
     @PostMapping("/sign-in")
     public ResponseEntity<String> signIn(
-            @Valid @RequestBody SignInDto body,
+            @Valid @RequestBody SignInRequestDto body,
             HttpServletResponse response
     ) {
             TokenResponse tokens = authService.signIn(body);
@@ -167,44 +170,5 @@ public class AuthController {
 
         response.addCookie(refreshTokenCookie);
         return ResponseEntity.status(HttpStatus.OK).body("You have been logged out successfully");
-    }
-
-
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Code is valid and account was activated",
-                    content = @Content(
-                            examples = @ExampleObject("Email verified")
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Code is invalid or expired",
-                    content = @Content(
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\"code\": \"Bad request\",\t\"message\": \"Verification code expired\", \t\"status\": 400}")
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "Code is valid, but user does not exist",
-                    content = @Content(
-                            schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"User already exists\",\t\"status\": 409}")
-                    )
-            )
-    })
-    @PostMapping("/verify-account")
-    public ResponseEntity<String> verifyAccount(
-            @Valid
-            @RequestBody
-            VerificationCodeRequestDto request
-    ) {
-        long parsedCode = Long.parseLong(request.code());
-
-        authService.verifyAccount(parsedCode);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Email verified");
     }
 }

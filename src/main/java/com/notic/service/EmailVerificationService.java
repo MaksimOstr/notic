@@ -1,34 +1,26 @@
 package com.notic.service;
 
+import com.notic.enums.VerificationCodeScopeEnum;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class EmailVerificationService {
-    private final JavaMailSender mailSender;
+    private final UserService userService;
+    private final VerificationCodeService verificationCodeService;
+    private final VerificationNotificationService verificationNotificationService;
 
-    @Value("${spring.mail.from}")
-    String from;
 
-    public void sendSimpleEmail(String to, String subject, String text) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(from);
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(text);
-            mailSender.send(message);
-            log.info("Email has been sent to {} with topic {}", to, subject);
-        } catch (MailException e) {
-            log.error("Sending email error {}: {}", to, e.getMessage());
-        }
+    public void requestEmailVerification(String email) {
+        verificationNotificationService.createAndSendCode(email, VerificationCodeScopeEnum.EMAIL_VERIFICATION);
+    }
+
+    @Transactional
+    public void verifyCodeAndEnableUser(int code) {
+        long userId = verificationCodeService.validate(code, VerificationCodeScopeEnum.EMAIL_VERIFICATION);
+        System.out.println("erfcsdfsdfsdf");
+        userService.markUserAsVerified(userId);
     }
 }

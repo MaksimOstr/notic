@@ -1,7 +1,7 @@
 package com.notic.dto;
 
-public record UserDto(
-        long id,
+public record CreateLocalUserDto(
         String email,
+        String password,
         String username
 ) {}
