@@ -9,6 +9,7 @@ import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.projection.UserAuthProviderProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -90,6 +91,10 @@ public class UserService {
 
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public Optional<UserAuthProviderProjection> getUserAuthProviderByEmail(String email) {
+        return userRepository.findUserByEmail(email);
     }
 
     public Optional<User> getUserById(long id) {

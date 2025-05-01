@@ -1,6 +1,9 @@
 package com.notic.unit.service;
 
+import com.notic.enums.AuthProviderEnum;
 import com.notic.enums.VerificationCodeScopeEnum;
+import com.notic.exception.ForgotPasswordException;
+import com.notic.projection.UserAuthProviderProjection;
 import com.notic.service.ForgotPasswordService;
 import com.notic.service.UserService;
 import com.notic.service.VerificationCodeService;
@@ -11,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,15 +36,34 @@ public class ForgotPasswordServiceTest {
     @InjectMocks
     private ForgotPasswordService forgotPasswordService;
 
-    @Test
-    void requestPasswordReset() {
+    @Nested
+    class RequestPasswordReset {
         String email = "<EMAIL>";
+        UserAuthProviderProjection projection = mock(UserAuthProviderProjection.class);
 
-        doNothing().when(verificationNotificationService).createAndSendCode(anyString(), any());
+        @Test
+        void shouldCreateAndSendCode() {
+            when(projection.getAuthProvider()).thenReturn(AuthProviderEnum.LOCAL);
 
-        forgotPasswordService.requestPasswordReset(email);
+            when(userService.getUserAuthProviderByEmail(anyString())).thenReturn(Optional.of(projection));
+            doNothing().when(verificationNotificationService).createAndSendCode(anyString(), any());
 
-        verify(verificationNotificationService).createAndSendCode(email, VerificationCodeScopeEnum.PASSWORD_RESET);
+            forgotPasswordService.requestPasswordReset(email);
+
+            verify(userService).getUserAuthProviderByEmail(email);
+            verify(verificationNotificationService).createAndSendCode(email, VerificationCodeScopeEnum.PASSWORD_RESET);
+        }
+
+        @Test
+        void shouldThrowExceptionWhenUserIsNotLocal() {
+            when(projection.getAuthProvider()).thenReturn(AuthProviderEnum.GOOGLE);
+            when(userService.getUserAuthProviderByEmail(anyString())).thenReturn(Optional.of(projection));
+
+            assertThrows(ForgotPasswordException.class, () -> forgotPasswordService.requestPasswordReset(email));
+
+            verify(userService).getUserAuthProviderByEmail(email);
+            verifyNoInteractions(verificationNotificationService);
+        }
     }
 
     @Nested

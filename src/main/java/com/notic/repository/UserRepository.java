@@ -1,6 +1,7 @@
 package com.notic.repository;
 
 import com.notic.entity.User;
+import com.notic.projection.UserAuthProviderProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmailWithRoles(String email);
 
     Optional<User> findByEmail(String email);
+
+    Optional<UserAuthProviderProjection> findUserByEmail(String email);
 
     @Modifying
     @Query("UPDATE User u SET u.enabled = :enabled WHERE u.id = :id")
