@@ -1,8 +1,7 @@
 package com.notic.unit.service;
 
 import com.notic.enums.VerificationCodeScopeEnum;
-import com.notic.exception.VerificationCodeException;
-import com.notic.service.EmailVerificationService;
+import com.notic.service.ForgotPasswordService;
 import com.notic.service.UserService;
 import com.notic.service.VerificationCodeService;
 import com.notic.service.VerificationNotificationService;
@@ -19,7 +18,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class EmailVerificationServiceTest {
+public class ForgotPasswordServiceTest {
     @Mock
     private VerificationCodeService verificationCodeService;
 
@@ -30,42 +29,43 @@ public class EmailVerificationServiceTest {
     private UserService userService;
 
     @InjectMocks
-    private EmailVerificationService emailVerificationService;
+    private ForgotPasswordService forgotPasswordService;
 
     @Test
-    void requestEmailVerification() {
+    void requestPasswordReset() {
         String email = "<EMAIL>";
 
         doNothing().when(verificationNotificationService).createAndSendCode(anyString(), any());
 
-        emailVerificationService.requestEmailVerification(email);
+        forgotPasswordService.requestPasswordReset(email);
 
-        verify(verificationNotificationService).createAndSendCode(email, VerificationCodeScopeEnum.EMAIL_VERIFICATION);
+        verify(verificationNotificationService).createAndSendCode(email, VerificationCodeScopeEnum.PASSWORD_RESET);
     }
 
     @Nested
-    class VerifyCodeAndEnableUser {
+    class VerifyCodeAndChangePassword {
         int code = 123456;
+        String newPassword = "<PASSWORD>";
 
         @Test
-        void shouldThrowInvalidCodeAndDoNotEnableUser() {
-            when(verificationCodeService.validate(anyInt(), any())).thenThrow(new VerificationCodeException(""));
+        void shouldNotUpdateUserPassword() {
+           when(verificationCodeService.validate(anyInt(), any())).thenThrow(new RuntimeException(""));
 
-            assertThrows(VerificationCodeException.class, () -> emailVerificationService.verifyCodeAndEnableUser(code));
+           assertThrows(RuntimeException.class, () -> forgotPasswordService.verifyCodeAndChangePassword(code, newPassword));
 
-            verify(verificationCodeService).validate(code, VerificationCodeScopeEnum.EMAIL_VERIFICATION);
-            verifyNoInteractions(userService);
+           verify(verificationCodeService).validate(code, VerificationCodeScopeEnum.PASSWORD_RESET);
+           verifyNoInteractions(userService);
         }
 
         @Test
-        void shouldEnableUser() {
+        void shouldUpdateUserPassword() {
             long userId = 123456L;
             when(verificationCodeService.validate(anyInt(), any())).thenReturn(userId);
 
-            emailVerificationService.verifyCodeAndEnableUser(code);
+            forgotPasswordService.verifyCodeAndChangePassword(code, newPassword);
 
-            verify(verificationCodeService).validate(code, VerificationCodeScopeEnum.EMAIL_VERIFICATION);
-            verify(userService).markUserAsVerified(userId);
+            verify(verificationCodeService).validate(code, VerificationCodeScopeEnum.PASSWORD_RESET);
+            verify(userService).updatePassword(userId, newPassword);
         }
     }
 }
