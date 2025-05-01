@@ -47,7 +47,7 @@ public class VerificationCodeService {
 
     @Transactional
     public long validate(int code, VerificationCodeScopeEnum scope) {
-        VerificationCode verificationCode = findByCode(code, scope)
+        VerificationCode verificationCode = findByCodeAndScope(code, scope)
                 .orElseThrow(() -> new VerificationCodeException("Invalid verification code"));
         Instant expiryAt = verificationCode.getExpiresAt();
 
@@ -82,7 +82,7 @@ public class VerificationCodeService {
         return Instant.now().plusSeconds(60 * CODE_EXPIRY_MINUTES);
     }
 
-    private Optional<VerificationCode> findByCode(int code, VerificationCodeScopeEnum scope) {
+    private Optional<VerificationCode> findByCodeAndScope(int code, VerificationCodeScopeEnum scope) {
         return verificationCodeRepository.findByCodeAndScope(code, scope);
     }
 
