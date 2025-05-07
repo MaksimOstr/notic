@@ -37,7 +37,7 @@ public class FriendshipService {
         }
     }
 
-    
+
     @Transactional(readOnly = true)
     public Page<FriendshipProjection> getFriendships(long userId, Pageable pageable) {
         return friendshipRepository.findFriendshipsByUserId(userId, pageable);

@@ -26,7 +26,7 @@ import java.time.Instant;
 @EntityListeners(AuditingEntityListener.class)
 public class Friendship {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "friendships_seq")
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

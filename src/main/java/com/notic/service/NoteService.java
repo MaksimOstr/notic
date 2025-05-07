@@ -44,13 +44,13 @@ public class NoteService {
         }
     }
 
-
     public Page<Note> getPersonalNotes(long userId, Pageable pageable) {
         List<String> visibility = List.of(
                 NoteVisibilityEnum.PUBLIC.name(),
                 NoteVisibilityEnum.PROTECTED.name(),
                 NoteVisibilityEnum.PRIVATE.name()
         );
+
         return noteRepository.findByAuthor_Id(userId, visibility, pageable);
     }
 
@@ -81,12 +81,10 @@ public class NoteService {
     public Note updateNote(UpdateNoteDto dto, long noteId, long userId) {
         Note note = getNoteByIdAndUserId(noteId, userId);
 
-        dto.getTitle().ifPresent(note::setTitle);
-        dto.getContent().ifPresent(note::setContent);
-        dto.getVisibility()
-                .map(String::toUpperCase)
-                .map(NoteVisibilityEnum::valueOf)
-                .ifPresent(note::setVisibility);
+        note.setTitle(dto.getTitle());
+        note.setContent(dto.getContent());
+        NoteVisibilityEnum visibility = NoteVisibilityEnum.valueOf(dto.getVisibility().toUpperCase());
+        note.setVisibility(visibility);
 
         return note;
     }

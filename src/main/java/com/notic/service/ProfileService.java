@@ -1,6 +1,7 @@
 package com.notic.service;
 
 import com.notic.dto.CreateProfileDto;
+import com.notic.dto.request.UpdateProfileDto;
 import com.notic.entity.Profile;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
@@ -18,8 +19,8 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
 
-    public Profile getProfileByUserId(long id) {
-        return profileRepository.findProfileByUser_Id(id)
+    public Profile getProfileByUserId(long userId) {
+        return profileRepository.findProfileByUser_Id(userId)
                 .orElseThrow(() -> new EntityDoesNotExistsException("Profile not found"));
     }
 
@@ -36,20 +37,27 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
-
-
-    private boolean isProfileExists(long id) {
-        return profileRepository.existsByUser_Id(id);
+    public Optional<GetProfileAvatarProjection> getProfileAvatarByUserId(long userId) {
+        return profileRepository.getProfileAvatarByUserId(userId);
     }
 
-    public Optional<GetProfileAvatarProjection> getProfileAvatarByUserId(long id) {
-        return profileRepository.getProfileAvatarByUserId(id);
-    }
+    @Transactional
+    public Profile updateProfile(long userId, UpdateProfileDto dto) {
+        Profile profile = getProfileByUserId(userId);
 
-    public void updateUserAvatarById(long id, String avatarUrl) {
-        int updated = profileRepository.updateProfileAvatarByUserId(id, avatarUrl);
+        profile.setUsername(dto.username());
+
+        return profile;
+    };
+
+    public void updateUserAvatarById(long userId, String avatarUrl) {
+        int updated = profileRepository.updateProfileAvatarByUserId(userId, avatarUrl);
         if(updated == 0) {
             throw new EntityDoesNotExistsException("User not found");
         }
+    }
+
+    private boolean isProfileExists(long userId) {
+        return profileRepository.existsByUser_Id(userId);
     }
 }

@@ -2,20 +2,19 @@ package com.notic.controller;
 
 import com.notic.config.security.model.CustomJwtUser;
 import com.notic.dto.CustomPutObjectDto;
+import com.notic.dto.request.UpdateProfileDto;
 import com.notic.dto.response.ApiErrorResponse;
 import com.notic.entity.Profile;
 import com.notic.service.ProfileService;
 import com.notic.service.S3Service;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -57,6 +56,30 @@ public class ProfileController {
             ) {
         Profile profile = profileService.getProfileByUserId(principal.getId());
         return ResponseEntity.ok(profile);
+    }
+
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Profile was successfully updated"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "If profile was not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponse.class),
+                            examples = {@ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"Profile was not found\",\t\"status\": 409}")}
+                    )
+            )
+    })
+    @PatchMapping
+    public ResponseEntity<Profile> updatePersonalProfile(
+            @AuthenticationPrincipal CustomJwtUser principal,
+            @Valid @RequestBody UpdateProfileDto body
+            ) {
+        Profile updatedProfile = profileService.updateProfile(principal.getId(), body);
+        return ResponseEntity.ok(updatedProfile);
     }
 
 

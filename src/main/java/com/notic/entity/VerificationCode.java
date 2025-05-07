@@ -14,7 +14,7 @@ import java.time.Instant;
 @Setter
 public class VerificationCode {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "verification_codes_seq")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

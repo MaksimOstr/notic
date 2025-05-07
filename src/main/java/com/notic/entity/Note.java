@@ -19,9 +19,8 @@ import java.time.Instant;
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Note {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "notes_seq")
     private long id;
 
     @Column(nullable = false)

@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "roles_seq")
     private long id;
 
     @Column(unique = true, nullable = false)

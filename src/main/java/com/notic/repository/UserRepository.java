@@ -7,14 +7,13 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM User u JOIN FETCH u.roles WHERE u.email = :email")
+    @Query("SELECT u FROM User u JOIN FETCH u.roles JOIN FETCH u.profile WHERE u.email = :email")
     Optional<User> findByEmailWithRoles(String email);
 
     Optional<User> findByEmail(String email);
