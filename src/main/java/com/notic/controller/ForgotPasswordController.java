@@ -70,7 +70,7 @@ public class ForgotPasswordController {
                     description = "Code is valid, but user does not exist",
                     content = @Content(
                             schema = @Schema(implementation = ApiErrorResponse.class),
-                            examples = @ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"User already exists\",\t\"status\": 409}")
+                            examples = @ExampleObject("{\t\"code\": \"Conflict\",\t\"message\": \"User not found\",\t\"status\": 409}")
                     )
             )
     })

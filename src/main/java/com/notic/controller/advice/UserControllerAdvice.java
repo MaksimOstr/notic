@@ -1,4 +1,4 @@
-package com.notic.advice;
+package com.notic.controller.advice;
 
 import com.notic.controller.UserController;
 import com.notic.exception.UploadFileException;

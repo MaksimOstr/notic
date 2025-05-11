@@ -1,8 +1,8 @@
 package com.notic.unit.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.notic.advice.AuthControllerAdvice;
-import com.notic.advice.GlobalControllerAdvice;
+import com.notic.controller.advice.AuthControllerAdvice;
+import com.notic.controller.advice.GlobalControllerAdvice;
 import com.notic.controller.AuthController;
 import com.notic.dto.*;
 import com.notic.dto.request.SignInRequestDto;

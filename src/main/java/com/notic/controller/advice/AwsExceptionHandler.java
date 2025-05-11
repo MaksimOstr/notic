@@ -1,4 +1,4 @@
-package com.notic.advice;
+package com.notic.controller.advice;
 
 import com.notic.dto.response.ApiErrorResponse;
 import io.swagger.v3.oas.annotations.media.Content;

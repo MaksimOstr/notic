@@ -1,4 +1,4 @@
-package com.notic.advice;
+package com.notic.controller.advice;
 
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.EntityAlreadyExistsException;

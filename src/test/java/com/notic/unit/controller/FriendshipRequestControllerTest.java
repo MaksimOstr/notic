@@ -1,8 +1,8 @@
 package com.notic.unit.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.notic.advice.FriendshipControllerAdvice;
-import com.notic.advice.GlobalControllerAdvice;
+import com.notic.controller.advice.FriendshipControllerAdvice;
+import com.notic.controller.advice.GlobalControllerAdvice;
 import com.notic.config.security.model.CustomJwtUser;
 import com.notic.controller.FriendshipRequestController;
 import com.notic.dto.request.SendFriendshipRequestDto;

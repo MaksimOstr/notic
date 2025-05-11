@@ -1,4 +1,4 @@
-package com.notic.advice;
+package com.notic.controller.advice;
 
 import com.notic.controller.FriendshipController;
 import com.notic.controller.FriendshipRequestController;
