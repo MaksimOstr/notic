@@ -20,7 +20,6 @@ public class EmailVerificationService {
     @Transactional
     public void verifyCodeAndEnableUser(int code) {
         long userId = verificationCodeService.validate(code, VerificationCodeScopeEnum.EMAIL_VERIFICATION);
-        System.out.println("erfcsdfsdfsdf");
         userService.markUserAsVerified(userId);
     }
 }

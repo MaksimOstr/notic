@@ -45,8 +45,8 @@ public class AuthService {
    }
 
    @Transactional
-   public TokenResponse signIn(SignInRequestDto body) {
-        Authentication authReq = new UsernamePasswordAuthenticationToken(body.email(), body.password());
+   public TokenResponse signIn(SignInRequestDto dto) {
+        Authentication authReq = new UsernamePasswordAuthenticationToken(dto.email(), dto.password());
         Authentication authentication = authenticationManager.authenticate(authReq);
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userService.getUserById(customUserDetails.getUserId())
