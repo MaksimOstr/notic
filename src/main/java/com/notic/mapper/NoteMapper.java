@@ -13,6 +13,6 @@ public interface NoteMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "author", source = "user")
-    @Mapping(target = "visibility", expression = "java(com.notic.enums.NoteVisibilityEnum.valueOf(dto.visibility()))")
+    @Mapping(target = "visibility", expression = "java(com.notic.enums.NoteVisibilityEnum.fromString(dto.visibility()))")
     Note toNote(CreateNoteDto dto, User user);
 }

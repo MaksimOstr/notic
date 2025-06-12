@@ -1,7 +1,5 @@
 package com.notic.dto.request;
 
-import com.notic.enums.NoteVisibilityEnum;
-import com.notic.validators.ValueOfEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -15,7 +13,6 @@ public record CreateNoteDto(
         String content,
 
         @NotBlank
-        @ValueOfEnum(enumClass = NoteVisibilityEnum.class)
         String visibility
 ) {
 }

@@ -1,6 +1,7 @@
 package com.notic.service;
 
 import com.notic.dto.request.CreateNoteDto;
+import com.notic.dto.request.NotesByFiltersRequest;
 import com.notic.dto.request.UpdateNoteDto;
 import com.notic.entity.Note;
 import com.notic.entity.User;
@@ -14,9 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
+
+import static com.notic.utils.SpecificationUtils.*;
 
 
 @Slf4j
@@ -54,6 +59,16 @@ public class NoteService {
         return noteRepository.findByAuthor_Id(userId, visibility, pageable);
     }
 
+    public Page<Note> getPersonalNotesByFilters(long userId, Pageable pageable, NotesByFiltersRequest dto) {
+        Specification<Note> spec = belongsToUser(userId)
+                .and(iLike("title", dto.title()))
+                .and(iLike("content", dto.content()))
+                .and(in("visibility", dto.getVisibility()))
+                .and(createdOn(dto.createdAt()));
+
+        return noteRepository.findAll(spec, pageable);
+    }
+
     @Transactional(readOnly = true)
     public Page<Note> getFriendPageOfNotes(long userId, long friendId, Pageable pageable) {
         boolean isFriendUser = userService.isUserExistsById(friendId);
@@ -81,10 +96,12 @@ public class NoteService {
     public Note updateNote(UpdateNoteDto dto, long noteId, long userId) {
         Note note = getNoteByIdAndUserId(noteId, userId);
 
-        note.setTitle(dto.getTitle());
-        note.setContent(dto.getContent());
-        NoteVisibilityEnum visibility = NoteVisibilityEnum.valueOf(dto.getVisibility().toUpperCase());
-        note.setVisibility(visibility);
+        Optional.ofNullable(dto.getTitle()).ifPresent(note::setTitle);
+        Optional.ofNullable(dto.getContent()).ifPresent(note::setContent);
+        Optional.ofNullable(dto.getVisibility()).ifPresent(visibility -> {
+            NoteVisibilityEnum visibilityEnum = NoteVisibilityEnum.fromString(visibility);
+            note.setVisibility(visibilityEnum);
+        });
 
         return note;
     }

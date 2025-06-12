@@ -2,6 +2,7 @@ package com.notic.controller;
 
 import com.notic.config.security.model.CustomJwtUser;
 import com.notic.dto.request.CreateNoteDto;
+import com.notic.dto.request.NotesByFiltersRequest;
 import com.notic.dto.request.UpdateNoteDto;
 import com.notic.entity.Note;
 import com.notic.dto.response.ApiErrorResponse;
@@ -70,6 +71,21 @@ public class NoteController {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Note> pageOfNotes = noteService.getPersonalNotes(principal.getId(), pageable);
+        return ResponseEntity.ok(pageOfNotes);
+    }
+
+    @GetMapping("/filters")
+    public ResponseEntity<Page<Note>> getNotesByFilters(
+            @AuthenticationPrincipal CustomJwtUser principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestBody NotesByFiltersRequest body
+    ) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Note> pageOfNotes = noteService.getPersonalNotesByFilters(principal.getId(), pageable, body);
+
         return ResponseEntity.ok(pageOfNotes);
     }
 
