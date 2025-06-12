@@ -2,6 +2,7 @@ package com.notic.repository;
 
 import com.notic.entity.User;
 import com.notic.projection.UserAuthProviderProjection;
+import com.notic.projection.UserWithRolesProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,8 +14,23 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
-    @Query("SELECT u FROM User u JOIN FETCH u.roles JOIN FETCH u.profile WHERE u.email = :email")
-    Optional<User> findByEmailWithRoles(String email);
+    @Query(value = """
+            
+                    SELECT
+                             u.id,
+                             u.email,
+                             u.auth_provider AS authProvider,
+                             u.password,
+                             u.account_non_locked AS accountNonLocked,
+                             u.enabled,
+                             STRING_AGG(r.name, ',') AS roleNames
+                         FROM users u
+                         JOIN users_role ur ON u.id = ur.user_id
+                         JOIN roles r ON ur.role_id = r.id
+                         WHERE u.email = :email
+                         GROUP BY u.id
+            """, nativeQuery = true)
+    Optional<UserWithRolesProjection> findByEmailWithRoles(String email);
 
     Optional<User> findByEmail(String email);
 

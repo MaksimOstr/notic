@@ -23,6 +23,7 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
+
     public Role getDefaultRole() {
         return roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new EntityNotFoundException("No role found"));

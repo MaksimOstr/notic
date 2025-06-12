@@ -3,8 +3,11 @@ package com.notic.config.security.service;
 import com.notic.config.security.model.CustomUserDetails;
 import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
+import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.projection.UserWithRolesProjection;
 import com.notic.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,13 +24,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userService.getUserByEmailWithRoles(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Authentication failed"));
+       try {
+           UserWithRolesProjection user = userService.getUserByEmailWithRoles(email);
 
-        if(user.getAuthProvider() != AuthProviderEnum.LOCAL) {
-            throw new UsernameNotFoundException("Account was created with another provider");
-        }
+           if(user.getAuthProviderEnum() != AuthProviderEnum.LOCAL) {
+               throw new UsernameNotFoundException("Account was created with another provider");
+           }
 
-        return new CustomUserDetails(user);
+           return new CustomUserDetails(user);
+       } catch (EntityDoesNotExistsException e) {
+           throw new UsernameNotFoundException(e.getMessage());
+       }
     }
 }

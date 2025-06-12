@@ -8,6 +8,8 @@ import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.projection.GetProfileAvatarProjection;
 import com.notic.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
@@ -19,6 +21,7 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
 
+    @Cacheable(cacheNames = "profiles", key = "#userId")
     public Profile getProfileByUserId(long userId) {
         return profileRepository.findProfileByUser_Id(userId)
                 .orElseThrow(() -> new EntityDoesNotExistsException("Profile not found"));
@@ -42,6 +45,7 @@ public class ProfileService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "profiles", key = "#userId")
     public Profile updateProfile(long userId, UpdateProfileDto dto) {
         Profile profile = getProfileByUserId(userId);
 
@@ -50,6 +54,7 @@ public class ProfileService {
         return profile;
     };
 
+    @CacheEvict(cacheNames = "profiles", key = "#userId")
     public void updateUserAvatarById(long userId, String avatarUrl) {
         int updated = profileRepository.updateProfileAvatarByUserId(userId, avatarUrl);
         if(updated == 0) {

@@ -10,6 +10,7 @@ import com.notic.entity.*;
 import com.notic.event.UserCreationEvent;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.mapper.AuthMapper;
+import com.notic.projection.UserWithRolesProjection;
 import com.notic.service.*;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,9 @@ public class AuthServiceTest {
                 null,
                 roles
         );
+        private final UserWithRolesProjection projection = new UserWithRolesProjection(
+
+        )
         private final CustomUserDetails customUserDetails = new CustomUserDetails(user);
         private final Authentication authRes = new UsernamePasswordAuthenticationToken(customUserDetails, signInDto.password(), Set.of());
         private final String refreshToken = "refreshToken";

@@ -18,6 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
+import static com.notic.utils.UserUtils.mapToRoleNames;
 import static com.notic.utils.UserUtils.mapUserRoles;
 
 
@@ -49,10 +52,9 @@ public class AuthService {
         Authentication authReq = new UsernamePasswordAuthenticationToken(dto.email(), dto.password());
         Authentication authentication = authenticationManager.authenticate(authReq);
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userService.getUserById(customUserDetails.getUserId())
-                .orElseThrow(() -> new EntityDoesNotExistsException("User not found"));
+        Set<String> roleNames = mapToRoleNames(customUserDetails.getAuthorities());
 
-        return tokenService.getTokenPair(user.getId(), mapUserRoles(user));
+        return tokenService.getTokenPair(customUserDetails.getUserId(), roleNames);
    }
 
    public TokenResponse refreshTokens(String refreshToken) {

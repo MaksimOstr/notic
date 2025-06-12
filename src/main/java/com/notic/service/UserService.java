@@ -10,8 +10,10 @@ import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.projection.UserAuthProviderProjection;
+import com.notic.projection.UserWithRolesProjection;
 import com.notic.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -101,8 +103,10 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public Optional<User> getUserByEmailWithRoles(String email) {
-        return userRepository.findByEmailWithRoles(email);
+    @Cacheable(value = "users:local_auth", key = "#email")
+    public UserWithRolesProjection getUserByEmailWithRoles(String email) {
+        return userRepository.findByEmailWithRoles(email)
+                .orElseThrow(() -> new EntityDoesNotExistsException(USER_NOT_FOUND));
     }
 
     private void isUserExistsByEmail(String email) {

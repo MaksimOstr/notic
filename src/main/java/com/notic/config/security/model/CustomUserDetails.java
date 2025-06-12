@@ -2,6 +2,7 @@ package com.notic.config.security.model;
 
 import com.notic.entity.Role;
 import com.notic.entity.User;
+import com.notic.projection.UserWithRolesProjection;
 import lombok.Getter;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 public class CustomUserDetails implements UserDetails, CredentialsContainer {
 
@@ -21,13 +23,13 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
     @Getter
     private final long userId;
 
-    public CustomUserDetails(User user) {
-        this.email = user.getEmail();
-        this.password = user.getPassword();
-        this.accountNonLocked = user.getAccountNonLocked();
-        this.enabled = user.getEnabled();
-        this.userId = user.getId();
-        this.authorities = mapToAuthorities(user.getRoles());
+    public CustomUserDetails(UserWithRolesProjection user) {
+        this.email = user.email();
+        this.password = user.password();
+        this.accountNonLocked = user.accountNonLocked();
+        this.enabled = user.enabled();
+        this.userId = user.id();
+        this.authorities = mapToAuthorities(user.getRoleNamesSet());
     }
 
     @Override
@@ -70,7 +72,7 @@ public class CustomUserDetails implements UserDetails, CredentialsContainer {
         this.password = null;
     }
 
-    private Collection<? extends GrantedAuthority> mapToAuthorities(Set<Role> roles) {
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
+    private Collection<? extends GrantedAuthority> mapToAuthorities(Set<String> roles) {
+        return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 }
