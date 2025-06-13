@@ -1,11 +1,10 @@
 package com.notic.dto;
 
-import java.io.InputStream;
+import org.springframework.web.multipart.MultipartFile;
+
 
 public record CustomPutObjectDto(
         String bucket,
         String key,
-        InputStream dataInputStream,
-        long contentLength,
-        String contentType
+        MultipartFile file
 ) {}

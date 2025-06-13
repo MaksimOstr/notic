@@ -29,6 +29,11 @@ public class CacheConfig {
                                 new GenericJackson2JsonRedisSerializer()))
                         .entryTtl(Duration.ofMinutes(30))
                         .disableCachingNullValues())
+                .withCacheConfiguration("roles:defaultRole", RedisCacheConfiguration.defaultCacheConfig()
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                                new GenericJackson2JsonRedisSerializer()))
+                        .entryTtl(Duration.ofMinutes(30))
+                        .disableCachingNullValues())
                 .build();
 
 

@@ -5,13 +5,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j
@@ -19,25 +26,28 @@ import java.net.URISyntaxException;
 @RequiredArgsConstructor
 public class S3Service {
 
-    private final S3Client s3Client;
+    private final S3AsyncClient s3AsyncClient;
 
-    public String upload(CustomPutObjectDto dto) {
-        PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(dto.bucket())
-                .key(dto.key())
-                .acl(ObjectCannedACL.PUBLIC_READ)
-                .contentType(dto.contentType())
-                .build();
+    public CompletableFuture<String> upload(CustomPutObjectDto dto) {
+        try {
+            MultipartFile file = dto.file();
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(dto.bucket())
+                    .key(dto.key())
+                    .acl(ObjectCannedACL.PUBLIC_READ)
+                    .contentType(file.getContentType())
+                    .build();
 
-        s3Client.putObject(request, RequestBody.fromInputStream(
-                dto.dataInputStream(),
-                dto.contentLength())
-        );
-
-        return "https://" + dto.bucket() + ".s3.amazonaws.com/" + dto.key();
+            return s3AsyncClient.putObject(
+                    request,
+                    AsyncRequestBody.fromBytes(file.getBytes())
+            ).thenApply(_ -> generateUrl(dto.bucket(), dto.key()));
+        } catch (IOException e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
-    @Async
+
     public void delete(String itemUrl) {
         try {
             URI uri = new URI(itemUrl);
@@ -49,10 +59,14 @@ public class S3Service {
                     .key(key)
                     .build();
 
-            s3Client.deleteObject(deleteObjectRequest);
+            s3AsyncClient.deleteObject(deleteObjectRequest);
         } catch (URISyntaxException e) {
             log.warn(e.getMessage());
         }
 
+    }
+
+    private String generateUrl(String bucket, String key) {
+        return s3AsyncClient.utilities().getUrl(b -> b.bucket(bucket).key(key)).toString();
     }
 }

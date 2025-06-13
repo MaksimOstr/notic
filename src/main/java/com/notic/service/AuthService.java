@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 import static com.notic.utils.UserUtils.mapToRoleNames;
-import static com.notic.utils.UserUtils.mapUserRoles;
 
 
 @Service

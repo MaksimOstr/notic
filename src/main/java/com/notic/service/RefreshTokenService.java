@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 import java.util.Optional;
+
 import static com.notic.utils.RefreshTokenUtils.*;
 
 
@@ -50,7 +52,7 @@ public class RefreshTokenService {
         RefreshToken token = findTokenByToken(refreshToken)
                 .orElseThrow(() -> new TokenValidationException("Refresh token not found"));
 
-        if(token.getExpiresAt().isBefore(Instant.now())) {
+        if (token.getExpiresAt().isBefore(Instant.now())) {
             deleteTokenById(token.getId());
             throw new TokenValidationException("Session is expired");
         }

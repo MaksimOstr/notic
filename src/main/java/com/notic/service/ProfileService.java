@@ -1,6 +1,7 @@
 package com.notic.service;
 
 import com.notic.dto.CreateProfileDto;
+import com.notic.dto.CustomPutObjectDto;
 import com.notic.dto.request.UpdateProfileDto;
 import com.notic.entity.Profile;
 import com.notic.exception.EntityAlreadyExistsException;
@@ -8,11 +9,15 @@ import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.projection.GetProfileAvatarProjection;
 import com.notic.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Optional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 
 @Service
@@ -20,6 +25,10 @@ import java.util.Optional;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
+    private final S3Service s3Service;
+
+    @Value("${AWS_AVATAR_BUCKET_NAME}")
+    private String avatarBucketName;
 
     @Cacheable(cacheNames = "profiles", key = "#userId")
     public Profile getProfileByUserId(long userId) {
@@ -40,8 +49,9 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
-    public Optional<GetProfileAvatarProjection> getProfileAvatarByUserId(long userId) {
-        return profileRepository.getProfileAvatarByUserId(userId);
+    public GetProfileAvatarProjection getProfileAvatarByUserId(long userId) {
+        return profileRepository.getProfileAvatarByUserId(userId)
+                .orElseThrow(() -> new EntityDoesNotExistsException("Profile was not found"));
     }
 
     @Transactional
@@ -55,11 +65,30 @@ public class ProfileService {
     };
 
     @CacheEvict(cacheNames = "profiles", key = "#userId")
-    public void updateUserAvatarById(long userId, String avatarUrl) {
-        int updated = profileRepository.updateProfileAvatarByUserId(userId, avatarUrl);
-        if(updated == 0) {
-            throw new EntityDoesNotExistsException("User not found");
-        }
+    public CompletableFuture<String> updateUserAvatarById(long userId, MultipartFile file) {
+        String avatarUrl = getProfileAvatarByUserId(userId).getAvatar();
+        s3Service.delete(avatarUrl);
+
+        return uploadProfileAvatar(file, userId)
+                .thenApply(url -> {
+                    int updated = profileRepository.updateProfileAvatarByUserId(userId, url);
+                    if(updated == 0) {
+                        throw new EntityDoesNotExistsException("User not found");
+                    }
+
+                    return url;
+                });
+
+
+    }
+
+    private CompletableFuture<String> uploadProfileAvatar(MultipartFile file, long userId) {
+        String key = UUID.randomUUID().toString() + userId;
+        return s3Service.upload(new CustomPutObjectDto(
+                avatarBucketName,
+                key,
+                file
+        ));
     }
 
     private boolean isProfileExists(long userId) {
