@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -49,9 +50,8 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
-    public GetProfileAvatarProjection getProfileAvatarByUserId(long userId) {
-        return profileRepository.getProfileAvatarByUserId(userId)
-                .orElseThrow(() -> new EntityDoesNotExistsException("Profile was not found"));
+    public Optional<String> getProfileAvatarByUserId(long userId) {
+        return profileRepository.getProfileAvatarByUser_Id(userId);
     }
 
     @Transactional
@@ -66,8 +66,8 @@ public class ProfileService {
 
     @CacheEvict(cacheNames = "profiles", key = "#userId")
     public CompletableFuture<String> updateUserAvatarById(long userId, MultipartFile file) {
-        String avatarUrl = getProfileAvatarByUserId(userId).getAvatar();
-        s3Service.delete(avatarUrl);
+        getProfileAvatarByUserId(userId)
+                .ifPresent(s3Service::delete);
 
         return uploadProfileAvatar(file, userId)
                 .thenApply(url -> {

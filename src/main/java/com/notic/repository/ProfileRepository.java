@@ -21,7 +21,8 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
     @Query("UPDATE Profile p SET p.avatar = :avatar WHERE p.user.id = :id")
     int updateProfileAvatarByUserId(@Param("id") long id, @Param("avatar") String avatar);
 
-    Optional<GetProfileAvatarProjection> getProfileAvatarByUserId(long id);
+    @Query("SELECT p.avatar FROM Profile p WHERE p.user.id = :userId")
+    Optional<String> getProfileAvatarByUser_Id(long userId);
 
     boolean existsByUser_Id(long id);
 }
