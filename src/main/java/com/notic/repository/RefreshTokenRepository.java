@@ -8,12 +8,13 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-    Optional<RefreshToken> findByUser(User user);
+    Optional<RefreshToken> findByUser_Id(Long id);
 
     @Modifying
     @Transactional
@@ -23,4 +24,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     Optional<RefreshToken> findByToken(String token);
 
     void deleteAllByExpiresAtBefore(Instant expiresAtBefore);
+
+    List<RefreshToken> findByUser_(User user);
 }

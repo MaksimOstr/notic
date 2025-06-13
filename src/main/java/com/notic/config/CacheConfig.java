@@ -11,32 +11,31 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
+import java.util.Map;
 
 @Configuration
 public class CacheConfig {
+
     @Bean
-    CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
+                "users:local_auth", defaultConfig(Duration.ofMinutes(10)),
+                "profiles", defaultConfig(Duration.ofMinutes(30)),
+                "roles:defaultRole", defaultConfig(Duration.ofMinutes(30))
+        );
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig())
                 .transactionAware()
-                .withCacheConfiguration("users:local_auth", RedisCacheConfiguration.defaultCacheConfig()
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                                new GenericJackson2JsonRedisSerializer()))
-                        .entryTtl(Duration.ofMinutes(10))
-                        .disableCachingNullValues())
-                .withCacheConfiguration("profiles", RedisCacheConfiguration.defaultCacheConfig()
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                                new GenericJackson2JsonRedisSerializer()))
-                        .entryTtl(Duration.ofMinutes(30))
-                        .disableCachingNullValues())
-                .withCacheConfiguration("roles:defaultRole", RedisCacheConfiguration.defaultCacheConfig()
-                        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                                new GenericJackson2JsonRedisSerializer()))
-                        .entryTtl(Duration.ofMinutes(30))
-                        .disableCachingNullValues())
+                .withInitialCacheConfigurations(cacheConfigs)
                 .build();
-
-
     }
 
+    private RedisCacheConfiguration defaultConfig(Duration ttl) {
+        return RedisCacheConfiguration.defaultCacheConfig()
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                        new GenericJackson2JsonRedisSerializer()))
+                .entryTtl(ttl)
+                .disableCachingNullValues();
+    }
 }

@@ -206,6 +206,12 @@ databaseChangeLog:
                   defaultValueComputed: CURRENT_TIMESTAMP
                   constraints:
                     nullable: false
+        - createIndex:
+            tableName: notes
+            columns:
+              - column:
+                  name: author_id
+            indexName: i_note_author_id
         - addForeignKeyConstraint:
             baseTableName: notes
             baseColumnNames: author_id

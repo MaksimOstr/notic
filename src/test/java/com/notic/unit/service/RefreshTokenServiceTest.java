@@ -5,12 +5,15 @@ import com.notic.entity.User;
 import com.notic.exception.TokenValidationException;
 import com.notic.repository.RefreshTokenRepository;
 import com.notic.service.RefreshTokenService;
+import jakarta.persistence.EntityManager;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,39 +35,51 @@ public class RefreshTokenServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
+    @Mock
+    private EntityManager entityManager;
+
+    @InjectMocks
     private RefreshTokenService refreshTokenService;
 
     @BeforeEach
     void setUp() {
-        refreshTokenService = new RefreshTokenService(refreshTokenRepository);
         ReflectionTestUtils.setField(refreshTokenService, "refreshSecret", "1212");
         ReflectionTestUtils.setField(refreshTokenService, "refreshTokenTtl", 3600);
     }
 
     @Nested
     class GetRefreshToken {
+        private final long userId = 1L;
         private final User user = new User();
+
+        @BeforeEach
+        void setUp() {
+            user.setId(userId);
+        }
+
         @Test
         void tokenAlreadyExists() {
-            when(refreshTokenRepository.findByUser(any(User.class))).thenReturn(Optional.empty());
 
-            String result = refreshTokenService.create(user);
+            when(entityManager.getReference(User.class, userId)).thenReturn(user);
+            when(refreshTokenRepository.findByUser_Id(anyLong())).thenReturn(Optional.empty());
 
-            verify(refreshTokenRepository).findByUser(user);
+            String result = refreshTokenService.create(userId);
+
+            verify(refreshTokenRepository).findByUser_Id(userId);
             verify(refreshTokenRepository).save(refreshTokenArgumentCaptor.capture());
 
             assertNotNull(result);
-            assertEquals(refreshTokenArgumentCaptor.getValue().getUser(), user);
+            assertEquals(refreshTokenArgumentCaptor.getValue().getUser().getId(), userId);
             assertNotEquals(refreshTokenArgumentCaptor.getValue().getToken(), result);
         }
 
         @Test
         void tokenDoesNotExist() {
-            when(refreshTokenRepository.findByUser(any(User.class))).thenReturn(Optional.of(new RefreshToken()));
+            when(refreshTokenRepository.findByUser_Id(anyLong())).thenReturn(Optional.of(new RefreshToken()));
 
-            String result = refreshTokenService.create(user);
+            String result = refreshTokenService.create(userId);
 
-            verify(refreshTokenRepository).findByUser(user);
+            verify(refreshTokenRepository).findByUser_Id(userId);
             verifyNoMoreInteractions(refreshTokenRepository);
 
             assertNotNull(result);

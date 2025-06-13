@@ -141,10 +141,9 @@ public class NoteController {
     })
     @GetMapping("/{noteId}")
     public ResponseEntity<Note> getNoteById(
-            @AuthenticationPrincipal CustomJwtUser principal,
             @PathVariable @NotNull Long noteId
     ) {
-        Note note = noteService.getNoteByIdAndUserId(noteId, principal.getId());
+        Note note = noteService.getNoteById(noteId);
 
         return ResponseEntity.ok(note);
     }
@@ -175,21 +174,19 @@ public class NoteController {
     })
     @PatchMapping("/{noteId}")
     public ResponseEntity<Note> updateNote(
-            @AuthenticationPrincipal CustomJwtUser principal,
             @PathVariable long noteId,
             @RequestBody@Valid UpdateNoteDto body
     ) {
-        Note updatedNote = noteService.updateNote(body, noteId, principal.getId());
+        Note updatedNote = noteService.updateNote(body, noteId);
         return ResponseEntity.ok(updatedNote);
     }
 
 
     @DeleteMapping("/{noteId}")
     public ResponseEntity<?> deleteNoteById(
-            @AuthenticationPrincipal CustomJwtUser principal,
             @PathVariable @NotNull Long noteId
     ) {
-        noteService.deleteNoteById(noteId, principal.getId());
+        noteService.deleteNoteById(noteId);
 
         return ResponseEntity.ok().build();
     }

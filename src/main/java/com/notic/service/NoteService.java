@@ -50,13 +50,7 @@ public class NoteService {
     }
 
     public Page<Note> getPersonalNotes(long userId, Pageable pageable) {
-        List<String> visibility = List.of(
-                NoteVisibilityEnum.PUBLIC.name(),
-                NoteVisibilityEnum.PROTECTED.name(),
-                NoteVisibilityEnum.PRIVATE.name()
-        );
-
-        return noteRepository.findByAuthor_Id(userId, visibility, pageable);
+        return noteRepository.findByAuthor_Id(userId, pageable);
     }
 
     public Page<Note> getPersonalNotesByFilters(long userId, Pageable pageable, NotesByFiltersRequest dto) {
@@ -88,13 +82,13 @@ public class NoteService {
                 NoteVisibilityEnum.PROTECTED.name()
         );
 
-        return noteRepository.findByAuthor_Id(friendId, visibility, pageable);
+        return noteRepository.findByAuthor_IdAndVisibility(friendId, pageable, visibility);
     }
 
 
     @Transactional
-    public Note updateNote(UpdateNoteDto dto, long noteId, long userId) {
-        Note note = getNoteByIdAndUserId(noteId, userId);
+    public Note updateNote(UpdateNoteDto dto, long noteId) {
+        Note note = getNoteById(noteId);
 
         Optional.ofNullable(dto.getTitle()).ifPresent(note::setTitle);
         Optional.ofNullable(dto.getContent()).ifPresent(note::setContent);
@@ -106,15 +100,12 @@ public class NoteService {
         return note;
     }
 
-
-    @Transactional
-    public void deleteNoteById(long noteId, long userId) {
-        noteRepository.deleteByIdAndAuthor_Id(noteId, userId);
+    public void deleteNoteById(long noteId) {
+        noteRepository.deleteById(noteId);
     }
 
-
-    public Note getNoteByIdAndUserId(long noteId, long userId) {
-        return noteRepository.findByIdAndAuthor_Id(noteId, userId)
+    public Note getNoteById(long noteId) {
+        return noteRepository.findById(noteId)
                 .orElseThrow(() -> new EntityDoesNotExistsException("Note not found"));
     }
 }

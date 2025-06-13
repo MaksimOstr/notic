@@ -2,12 +2,16 @@ package com.notic.service;
 
 import com.notic.entity.RefreshToken;
 import com.notic.entity.User;
+import com.notic.exception.EntityDoesNotExistsException;
 import com.notic.exception.TokenValidationException;
 import com.notic.repository.RefreshTokenRepository;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +26,7 @@ import static com.notic.utils.RefreshTokenUtils.*;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final EntityManager entityManager;
 
     @Value("${REFRESH_TOKEN_SECRET}")
     private String refreshSecret;
@@ -37,13 +42,13 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public String create(User user) {
-        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByUser(user);
+    public String create(long userId) {
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findByUser_Id(userId);
 
         if (optionalRefreshToken.isPresent()) {
             return updateRefreshToken(optionalRefreshToken.get());
         } else {
-            return createNewRefreshToken(user);
+            return createNewRefreshToken(userId);
         }
     }
 
@@ -74,16 +79,20 @@ public class RefreshTokenService {
         refreshTokenRepository.deleteByToken(hashedToken(token));
     }
 
-    private String createNewRefreshToken(User user) {
-        String newToken = generateToken();
-        RefreshToken refreshToken = new RefreshToken(
-                hashedToken(newToken),
-                user,
-                getExpireTime()
-        );
-        refreshTokenRepository.save(refreshToken);
+    private String createNewRefreshToken(long userId) {
+        try {
+            String newToken = generateToken();
+            RefreshToken refreshToken = new RefreshToken(
+                    hashedToken(newToken),
+                    entityManager.getReference(User.class, userId),
+                    getExpireTime()
+            );
+            refreshTokenRepository.save(refreshToken);
 
-        return newToken;
+            return newToken;
+        } catch (DataIntegrityViolationException e) {
+            throw new EntityDoesNotExistsException("User not found");
+        }
     }
 
     private Optional<RefreshToken> findTokenByToken(String token) {

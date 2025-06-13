@@ -18,7 +18,6 @@ public class TokenService {
 
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtTokenService;
-    private final EntityManager entityManager;
 
     @Transactional
     public TokenResponse refreshTokens(String refreshToken) {
@@ -30,8 +29,7 @@ public class TokenService {
 
     @Transactional
     public TokenResponse getTokenPair(long userId, Set<String> userRoles) {
-        User user = entityManager.getReference(User.class, userId);
-        String refreshToken = refreshTokenService.create(user);
+        String refreshToken = refreshTokenService.create(userId);
         return new TokenResponse(getAccessToken(userId, userRoles), refreshToken);
     }
 

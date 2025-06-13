@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -19,16 +20,19 @@ import java.util.Optional;
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long>, JpaSpecificationExecutor<Note> {
 
-    @Query("SELECT n FROM Note n WHERE n.author.id = :authorId AND n.visibility IN :visibility")
+    @Query("SELECT n FROM Note n WHERE n.author.id = :authorId")
     Page<Note> findByAuthor_Id(
             @Param("authorId")
             long authorId,
-            @Param("visibility")
-            Collection<String> visibility,
             Pageable pageable
     );
 
-    Optional<Note> findByIdAndAuthor_Id(long id, long authorId);
+    @Query("SELECT n FROM Note n WHERE n.author.id = :authorId AND n.visibility IN :visibility")
+    Page<Note> findByAuthor_IdAndVisibility(long authorId, Pageable pageable, List<String> visibility);
 
-    void deleteByIdAndAuthor_Id(long id, long authorId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM Note n WHERE n.id = :id")
+    void deleteById(long id);
 }

@@ -86,7 +86,7 @@ public class TokenServiceTest {
     }
 
     @Test
-    void getTokenPait() {
+    void getTokenPair() {
         long userId = 1123L;
         Set<String> roles = Set.of("USER", "ADMIN");
         String createdRefreshToken = "createdRefreshToken";
@@ -94,14 +94,12 @@ public class TokenServiceTest {
         User user = new User();
         user.setId(userId);
 
-        when(entityManager.getReference(User.class, userId)).thenReturn(user);
-        when(refreshTokenService.create(any(User.class))).thenReturn(createdRefreshToken);
+        when(refreshTokenService.create(anyLong())).thenReturn(createdRefreshToken);
         when(jwtService.getJwsToken(anySet(), anyLong())).thenReturn(accessToken);
 
         TokenResponse result = tokenService.getTokenPair(userId, roles);
 
-        verify(entityManager).getReference(User.class, userId);
-        verify(refreshTokenService).create(user);
+        verify(refreshTokenService).create(userId);
         verify(jwtService).getJwsToken(roles, userId);
 
         assertNotNull(result);

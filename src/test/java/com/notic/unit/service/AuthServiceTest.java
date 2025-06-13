@@ -7,6 +7,7 @@ import com.notic.dto.request.SignUpRequestDto;
 import com.notic.dto.response.SignUpResponseDto;
 import com.notic.dto.response.TokenResponse;
 import com.notic.entity.*;
+import com.notic.enums.AuthProviderEnum;
 import com.notic.event.UserCreationEvent;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.mapper.AuthMapper;
@@ -26,9 +27,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -70,8 +73,8 @@ public class AuthServiceTest {
     class SignUp {
         private final String password = "<PASSWORD>";
         private final String hashedPassword = "hashedPassword";
-        private final  SignUpRequestDto signUpRequestDto = new SignUpRequestDto("test@gmail.com", "test", password);
-        private final  User user = new User(signUpRequestDto.email(), hashedPassword, Set.of());
+        private final SignUpRequestDto signUpRequestDto = new SignUpRequestDto("test@gmail.com", "test", password);
+        private final User user = new User(signUpRequestDto.email(), hashedPassword, Set.of());
         private final Profile profile = new Profile(
                 signUpRequestDto.username(),
                 null,
@@ -114,17 +117,26 @@ public class AuthServiceTest {
     class SignIn {
 
         private final SignInRequestDto signInDto = new SignInRequestDto("test@gmail.com", "12121212");
+        private final String provider = AuthProviderEnum.LOCAL.name();
         private final Role role = new Role("ROLE_USER");
+        private final long userId = 1L;
         private final Set<Role> roles = Set.of(role);
         private final User user = new User(
                 signInDto.email(),
                 null,
                 roles
         );
-        private final UserWithRolesProjection projection = new UserWithRolesProjection(
 
-        )
-        private final CustomUserDetails customUserDetails = new CustomUserDetails(user);
+        private final UserWithRolesProjection projection = new UserWithRolesProjection(
+                userId,
+                signInDto.email(),
+                provider,
+                null,
+                true,
+                true,
+                role.getName()
+        );
+        private final CustomUserDetails customUserDetails = new CustomUserDetails(projection);
         private final Authentication authRes = new UsernamePasswordAuthenticationToken(customUserDetails, signInDto.password(), Set.of());
         private final String refreshToken = "refreshToken";
         private final String accessToken = "accessToken";
@@ -149,7 +161,6 @@ public class AuthServiceTest {
         void SuccessfullySignIn() {
 
             when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authRes);
-            when(userService.getUserById(anyLong())).thenReturn(Optional.of(user));
             when(tokenService.getTokenPair(anyLong(), anySet())).thenReturn(tokenResponse);
 
             TokenResponse result = authService.signIn(signInDto);

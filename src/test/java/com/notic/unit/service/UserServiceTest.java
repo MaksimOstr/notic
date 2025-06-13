@@ -10,6 +10,7 @@ import com.notic.entity.User;
 import com.notic.enums.AuthProviderEnum;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
+import com.notic.projection.UserWithRolesProjection;
 import com.notic.repository.UserRepository;
 import com.notic.service.ProfileService;
 import com.notic.service.RoleService;
@@ -194,23 +195,27 @@ public class UserServiceTest {
     void getUserByEmailWithRoles() {
         String email = "test@gmail.com";
         String password = "12121212";
-        Set<Role> roles = Set.of(new Role("ROLE_USER"));
-        User user = new User(email, password, roles);
+        Set<String> roleNames = Set.of("ROLE_USER", "ROLE_ADMIN");
+        UserWithRolesProjection projection = new UserWithRolesProjection(
+                null,
+                email,
+                "local",
+                password,
+                true,
+                true,
+                "ROLE_USER,ROLE_ADMIN"
+        );
 
-        when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailWithRoles(anyString())).thenReturn(Optional.of(projection));
 
-        Optional<User> result = userService.getUserByEmailWithRoles(email);
+        UserWithRolesProjection result = userService.getUserByEmailWithRoles(email);
 
         verify(userRepository).findByEmailWithRoles(email);
 
-        assertTrue(result.isPresent());
-
-        User resultUser = result.get();
-
-        assertNotNull(resultUser);
-        assertEquals(user, resultUser);
-        assertEquals(email, resultUser.getEmail());
-        assertEquals(roles, resultUser.getRoles());
+        assertNotNull(result);
+        assertEquals(projection, result);
+        assertEquals(email, result.email());
+        assertEquals(roleNames, result.getRoleNamesSet());
     }
 
 
