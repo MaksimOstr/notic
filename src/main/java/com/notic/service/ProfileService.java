@@ -6,11 +6,13 @@ import com.notic.dto.request.UpdateProfileDto;
 import com.notic.entity.Profile;
 import com.notic.exception.EntityAlreadyExistsException;
 import com.notic.exception.EntityDoesNotExistsException;
-import com.notic.projection.GetProfileAvatarProjection;
 import com.notic.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +29,14 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
     private final S3Service s3Service;
+    private final CacheManager cacheManager;
 
     @Value("${AWS_AVATAR_BUCKET_NAME}")
     private String avatarBucketName;
 
-    @Cacheable(cacheNames = "profiles", key = "#userId")
+    private static final String PROFILE_CACHE_NAME = "profiles";
+
+    @Cacheable(cacheNames = PROFILE_CACHE_NAME, key = "#userId")
     public Profile getProfileByUserId(long userId) {
         return profileRepository.findProfileByUser_Id(userId)
                 .orElseThrow(() -> new EntityDoesNotExistsException("Profile not found"));
@@ -55,7 +60,7 @@ public class ProfileService {
     }
 
     @Transactional
-    @CacheEvict(cacheNames = "profiles", key = "#userId")
+    @CachePut(cacheNames = PROFILE_CACHE_NAME, key = "#userId")
     public Profile updateProfile(long userId, UpdateProfileDto dto) {
         Profile profile = getProfileByUserId(userId);
 
@@ -64,7 +69,7 @@ public class ProfileService {
         return profile;
     };
 
-    @CacheEvict(cacheNames = "profiles", key = "#userId")
+    @CacheEvict(cacheNames = PROFILE_CACHE_NAME, key = "#userId")
     public CompletableFuture<String> updateUserAvatarById(long userId, MultipartFile file) {
         getProfileAvatarByUserId(userId)
                 .ifPresent(s3Service::delete);

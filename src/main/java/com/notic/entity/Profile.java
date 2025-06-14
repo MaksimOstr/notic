@@ -23,8 +23,8 @@ public class Profile {
     private String avatar;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JsonIgnore
     private User user;
 
     public Profile(CreateProfileDto dto) {

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,7 +94,7 @@ public class RefreshTokenService {
         }
     }
 
-    private Optional<RefreshToken> findTokenByToken(String token) {
+    public Optional<RefreshToken> findTokenByToken(String token) {
         return refreshTokenRepository.findByToken(hashedToken(token));
     }
 

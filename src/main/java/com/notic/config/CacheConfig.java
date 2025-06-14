@@ -1,7 +1,6 @@
 package com.notic.config;
 
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -19,7 +18,6 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
-                "users:local_auth", defaultConfig(Duration.ofMinutes(10)),
                 "profiles", defaultConfig(Duration.ofMinutes(30)),
                 "roles:defaultRole", defaultConfig(Duration.ofMinutes(30))
         );

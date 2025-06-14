@@ -103,7 +103,7 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    @Cacheable(value = "users:local_auth", key = "#email")
+
     public UserWithRolesProjection getUserByEmailWithRoles(String email) {
         return userRepository.findByEmailWithRoles(email)
                 .orElseThrow(() -> new EntityDoesNotExistsException(USER_NOT_FOUND));
