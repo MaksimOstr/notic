@@ -45,7 +45,7 @@ public class User {
     private Boolean accountNonLocked = true;
 
     @Column(nullable = false)
-    private Boolean enabled = true;
+    private Boolean enabled = false;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JsonManagedReference
